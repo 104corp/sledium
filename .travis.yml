@@ -1,0 +1,42 @@
+language: php
+
+php:
+- 7.1
+
+branches:
+ only:
+  - master
+  - v0.1
+
+install:
+- composer install
+
+notifications:
+  email: false
+  slack:
+    on_success: never
+    secure: dfscWEUNuZEsnYCcSAGqTw7fMfa/hTqCdR+iB0OyGiz+i7sw4YdOW3UKgSYTewKzekAl59ScCo63eafFmXX6MoaBm4AJvlbMry/cNFoVKcFXyDipx+vQDS66Xr65BED3lBh5RKZXQD0z/inrC1B2fighg0BxEgZKcgFKUPCIG1nuDHbz/fkRYipgNVfISPtXeO5/g5tBwkSi6lUXqeWQITjN/ZsUKcYmVA7a3ij2LxgxyPdYmpJZFux8Ph6J50kWV3GR/GRVbry9VwPU97UK53KACkSrjdIgGPkTH4TgdIHKkDOVNYzAFDC/zYf2VjCG7s3tRTCVsTsdORI4saQOxitaNSPTbANRjuc4B2VApDp4g0cyiTlpGtUoDMcW4A6bHESfdpDZi3WWGXWPxG7FmqKadhH3NDMhIkbyY77gF5muBe5PWcTE6gto7fXzv8zaCh7QE1gB3lTXe4RGuCmyndbX2s6OjO2wktDS2sU8rv+H5Z24ivL8/v+A9gx/QavdE6R2BZ0CCfPVr4yAU9UZG7CUtGq4uZ6ZUsMJI64+a8tWyZBDCN0XdS2V76H0AaW5qF8++RwZicQlIl/I5n8S35OG1TqF5VBWLJsZx+ULYINXk340TGRKTpwR070S6Vz8kbbv/nhcG/m2foT6vOdSexDXb6WRh9JEiWdZKZfcd9Q=
+
+git:
+  submodules: false
+
+cache:
+  directories:
+  # See https://blog.wyrihaximus.net/2015/07/composer-cache-on-travis/
+  - $HOME/.composer/cache/files
+  - vendor
+
+before_script:
+    - travis_retry composer self-update
+    - travis_retry composer install --no-interaction --prefer-source --dev
+
+script:
+  - vendor/bin/phpcs
+  - vendor/bin/phpunit -c phpunit.xml --coverage-text
+
+notifications:
+  email:
+   recipients:
+      - x4d1q5t4w1g0e1g5@104corp.slack.com
+   on_success: awlays # default: change
+   on_failure: always # default: always

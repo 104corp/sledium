@@ -1,0 +1,41 @@
+{
+    "name": "104corp/apim-framework",
+    "description": "APIM Framework ",
+    "license": "104 Corporation. All rights reserved.",
+    "authors": [
+        {
+            "name": "Jack Zhu",
+            "email": "jack.zhu@104.com.tw"
+        }
+    ],
+    "require": {
+        "illuminate/cache": "^5.5",
+        "illuminate/console": "^5.5",
+        "illuminate/container": "^5.5",
+        "illuminate/contracts": "^5.5",
+        "illuminate/database": "^5.5",
+        "illuminate/events": "^5.5",
+        "illuminate/filesystem": "^5.5",
+        "illuminate/log": "^5.5",
+        "illuminate/pagination": "^5.5",
+        "illuminate/queue": "^5.5",
+        "illuminate/support": "^5.5",
+        "illuminate/redis": "^5.5",
+        "slim/slim": "^3.9"
+    },
+    "require-dev": {
+        "ext-xdebug": "^2.5",
+        "phpunit/phpunit": "^6.4",
+        "squizlabs/php_codesniffer": "^3.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "Apim\\Framework\\": "framework"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Apim\\Framework\\Tests\\": "tests/"
+        }
+    }
+}
