@@ -48,7 +48,7 @@ class App extends SlimApp
     protected function registerServices()
     {
         $container = $this->getContainer();
-        $container->instance('slim', $this);
+        $container->instance('sledium', $this);
         $this->getContainer()->singleton('config', function () {
             return new Config($this->getContainer()->configPath());
         });
