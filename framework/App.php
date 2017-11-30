@@ -7,8 +7,6 @@ use Apim\Framework\ServiceProviders\HttpServiceProvider;
 use Slim\App as SlimApp;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Apim\Framework\Registrars\HttpAliasRegistrar;
-use Apim\Framework\Registrars\HttpServicesRegistrar;
 use Apim\Framework\Handlers\IlluminateExceptionHandler;
 
 /**

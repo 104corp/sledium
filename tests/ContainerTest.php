@@ -5,7 +5,9 @@ namespace Apim\Framework\Tests;
 
 
 use Apim\Framework\Container;
+use Apim\Framework\Facades\SlimApp;
 use Apim\Framework\Tests\Fixtures\Dummy1;
+use Apim\Framework\Tests\Fixtures\Dummy1ServiceProvider;
 use Apim\Framework\Tests\Fixtures\Dummy2;
 use PHPUnit\Framework\TestCase;
 
@@ -69,6 +71,39 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(Dummy2::class, $container['Cde']);
         $this->assertInstanceOf(Dummy2::class, $container->get('Cde'));
         $this->assertTrue($container->get('Cde') === $container['Cde']);
+
+    }
+
+    /**
+     * @test
+     */
+    public function registerConfiguredProvidersShouldWork()
+    {
+        $basePath = implode(DIRECTORY_SEPARATOR, [
+            __DIR__,
+            'Fixtures',
+            'resource',
+            'ContainerTest',
+            'registerConfiguredProvidersShouldWork'
+        ]);
+        $this->assertTrue(true);
+
+    }
+
+    /**
+     * @test
+     */
+    public function registerDeferredProviderShouldWork()
+    {
+        $container = new Container(__DIR__);
+        ob_start();
+        $container->registerDeferredProvider(Dummy1ServiceProvider::class, 'dummy1');
+        $output = ob_get_clean();
+        $this->assertEmpty($output);
+        ob_start();
+        $container->get('dummy1');
+        $output = ob_get_clean();
+        $this->assertRegExp("/construct/", $output);
     }
 
 }

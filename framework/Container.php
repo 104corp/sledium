@@ -319,7 +319,8 @@ class Container extends IlluminateContainer implements IlluminateApplication
      */
     public function bound($abstract)
     {
-        return parent::bound($abstract) ? true : $this->resolveInDependenciesPath($abstract);
+        return isset($this->deferredServices[$abstract]) || parent::bound($abstract)
+            ? true : $this->resolveInDependenciesPath($abstract);
     }
 
     /**
@@ -330,7 +331,11 @@ class Container extends IlluminateContainer implements IlluminateApplication
     public function resolve($abstract, $parameters = [])
     {
         if (!parent::bound($abstract)) {
-            $this->resolveInDependenciesPath($abstract);
+            if (isset($this->deferredServices[$abstract])) {
+                $this->loadDeferredProvider($abstract);
+            } else {
+                $this->resolveInDependenciesPath($abstract);
+            }
         }
         return parent::resolve($abstract, $parameters);
     }
@@ -510,20 +515,6 @@ class Container extends IlluminateContainer implements IlluminateApplication
         }
     }
 
-    /**
-     * @param string $abstract
-     * @param array $parameters
-     * @return mixed
-     */
-    public function make($abstract, array $parameters = [])
-    {
-        $abstract = $this->getAlias($abstract);
-        if (isset($this->deferredServices[$abstract]) && !isset($this->instances[$abstract])) {
-            $this->loadDeferredProvider($abstract);
-        }
-        return parent::make($abstract, $parameters);
-    }
-
 
     /**
      * @param string $provider
@@ -651,7 +642,6 @@ class Container extends IlluminateContainer implements IlluminateApplication
         foreach ([
                      'cache' => 'Illuminate\Cache\CacheServiceProvider',
                      'cache.store' => 'Illuminate\Cache\CacheServiceProvider',
-                     'cookie' => 'Illuminate\Cookie\CookieServiceProvider',
                      'encrypter' => 'Illuminate\Encryption\EncryptionServiceProvider',
                      'db' => 'Illuminate\Database\DatabaseServiceProvider',
                      'db.connection' => 'Illuminate\Database\DatabaseServiceProvider',
@@ -694,11 +684,6 @@ class Container extends IlluminateContainer implements IlluminateApplication
                      'config' => [
                          'Illuminate\Config\Repository',
                          'Apim\Framework\Config',
-                     ],
-                     'cookie' => [
-                         'Illuminate\Cookie\CookieJar',
-                         'Illuminate\Contracts\Cookie\Factory',
-                         'Illuminate\Contracts\Cookie\QueueingFactory'
                      ],
                      'encrypter' => [
                          'Illuminate\Encryption\Encrypter',
@@ -753,16 +738,9 @@ class Container extends IlluminateContainer implements IlluminateApplication
                      'queue.failer' => [
                          'Illuminate\Queue\Failed\FailedJobProviderInterface'
                      ],
-                     'redirect' => [
-                         'Illuminate\Routing\Redirector'
-                     ],
                      'redis' => [
                          'Illuminate\Redis\RedisManager',
                          'Illuminate\Contracts\Redis\Factory'
-                     ],
-                     'request' => [
-                         'Illuminate\Http\Request',
-                         'Symfony\Component\HttpFoundation\Request'
                      ],
                      'exception.handler' => [
                          'Illuminate\Contracts\Debug\ExceptionHandler',
