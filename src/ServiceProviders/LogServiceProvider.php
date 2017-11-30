@@ -43,27 +43,10 @@ class LogServiceProvider extends ServiceProvider
                 }
             }
             if (!$hasHandler) {
-                $writer->useFiles($this->getLogPath(), $defaultLevel);
+                $writer->useFiles($this->getLogFolderPath() . DIRECTORY_SEPARATOR . 'sledium.log', $defaultLevel);
             }
             return $writer;
         });
-    }
-
-    /**
-     * @return void
-     */
-    public function boot()
-    {
-
-        if ($this->app->runningInConsole()) {
-            $this->publishes(
-                [
-                    __DIR__ . '/../../resources/ServiceProviders/config/logger.php' =>
-                        $this->app->configPath() . '/logger.php',
-                ],
-                'sledium-logger'
-            );
-        }
     }
 
     public function provides()
@@ -88,11 +71,11 @@ class LogServiceProvider extends ServiceProvider
     {
         switch ($handler) {
             case 'files':
-                $writer->useFiles($this->getLogPath(), $level);
+                $writer->useFiles($this->getLogFolderPath() . DIRECTORY_SEPARATOR . 'sledium.log', $level);
                 break;
             case 'daily_files':
                 $writer->useDailyFiles(
-                    $this->getLogPath(),
+                    $this->getLogFolderPath() . DIRECTORY_SEPARATOR . 'sledium_daily.log',
                     $this->getLoggerConfig()->get('max_files', 5),
                     $level
                 );
@@ -119,8 +102,8 @@ class LogServiceProvider extends ServiceProvider
         return $this->levels[$level] ?? Monolog::DEBUG;
     }
 
-    protected function getLogPath(): string
+    protected function getLogFolderPath(): string
     {
-        return $this->app->storagePath().'/logs/app.log';
+        return $this->app->storagePath() . '/logs';
     }
 }
