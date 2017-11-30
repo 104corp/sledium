@@ -1,0 +1,31 @@
+pipeline:
+  vendor:
+    image: composer
+    commands:
+    - composer install
+    when:
+      local: false
+
+  style_php70:
+    group: tests
+    image: 104corp/php-testing:7.0
+    commands:
+    - php vendor/bin/phpcs
+
+  unit_php70:
+    group: tests
+    image: 104corp/php-testing:7.0
+    commands:
+    - php vendor/bin/phpunit
+
+  style:
+    group: tests
+    image: 104corp/php-testing:7.1
+    commands:
+    - php vendor/bin/phpcs
+
+  unit:
+    group: tests
+    image: 104corp/php-testing:7.1
+    commands:
+    - php vendor/bin/phpunit
