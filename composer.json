@@ -9,6 +9,7 @@
         }
     ],
     "require": {
+        "php": ">=7.0",
         "illuminate/cache": "^5.5",
         "illuminate/console": "^5.5",
         "illuminate/container": "^5.5",
@@ -19,8 +20,8 @@
         "illuminate/log": "^5.5",
         "illuminate/pagination": "^5.5",
         "illuminate/queue": "^5.5",
-        "illuminate/support": "^5.5",
         "illuminate/redis": "^5.5",
+        "illuminate/support": "^5.5",
         "slim/slim": "^3.9"
     },
     "require-dev": {
@@ -37,5 +38,8 @@
         "psr-4": {
             "Apim\\Framework\\Tests\\": "tests/"
         }
+    },
+    "config": {
+        "sort-packages": true
     }
 }
