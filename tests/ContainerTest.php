@@ -5,10 +5,10 @@ namespace Apim\Framework\Tests;
 
 
 use Apim\Framework\Container;
-use Apim\Framework\Facades\SlimApp;
 use Apim\Framework\Tests\Fixtures\Dummy1;
 use Apim\Framework\Tests\Fixtures\Dummy1ServiceProvider;
 use Apim\Framework\Tests\Fixtures\Dummy2;
+use Apim\Framework\Tests\Fixtures\Dummy2ServiceProvider;
 use PHPUnit\Framework\TestCase;
 
 class ContainerTest extends TestCase
@@ -100,10 +100,17 @@ class ContainerTest extends TestCase
         $container->registerDeferredProvider(Dummy1ServiceProvider::class, 'dummy1');
         $output = ob_get_clean();
         $this->assertEmpty($output);
+        $container->boot();
         ob_start();
         $container->get('dummy1');
         $output = ob_get_clean();
         $this->assertRegExp("/construct/", $output);
+        $container->registerDeferredProvider(Dummy2ServiceProvider::class, 'dummy2');
+        ob_start();
+        $dummy = $container->get('dummy2');
+        $output = ob_get_clean();
+        $this->assertRegExp('/'.addslashes(get_class($dummy)).'/', $output);
     }
+
 
 }

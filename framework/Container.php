@@ -509,8 +509,6 @@ class Container extends IlluminateContainer implements IlluminateApplication
                 $this->booting(function () use ($instance) {
                     $this->bootProvider($instance);
                 });
-            } else {
-                $this->bootProvider($instance);
             }
         }
     }
