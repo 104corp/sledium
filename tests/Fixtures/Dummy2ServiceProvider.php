@@ -3,7 +3,6 @@
 
 namespace Sledium\Tests\Fixtures;
 
-
 use Illuminate\Support\ServiceProvider;
 
 class Dummy2ServiceProvider extends ServiceProvider
@@ -14,7 +13,7 @@ class Dummy2ServiceProvider extends ServiceProvider
     }
     public function register()
     {
-        $this->app->singleton('dummy2', function (){
+        $this->app->singleton('dummy2', function () {
             return new Dummy2();
         });
     }

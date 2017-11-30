@@ -13,16 +13,8 @@
     <rule ref="PSR2"/>
 
     <!-- Paths and file to check -->
-    <file>framework</file>
-
-    <!-- specific and just exclude rules in development files -->
-    <rule ref="PSR2.Methods.MethodDeclaration.Underscore">
-        <exclude-pattern>tests</exclude-pattern>
-    </rule>
-    <!--<rule ref="PSR1.Classes.ClassDeclaration.MissingNamespace">-->
-        <!--<exclude-pattern>database</exclude-pattern>-->
-        <!--<exclude-pattern>tests</exclude-pattern>-->
-    <!--</rule>-->
+    <file>src</file>
+    <file>tests</file>>
 
     <!-- specific and just exclude rules in some file -->
 </ruleset>

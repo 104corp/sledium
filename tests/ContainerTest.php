@@ -3,7 +3,6 @@
 
 namespace Sledium\Tests;
 
-
 use Sledium\Config;
 use Sledium\Container;
 use Sledium\Tests\Fixtures\Dummy1;
@@ -72,7 +71,6 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(Dummy2::class, $container['Cde']);
         $this->assertInstanceOf(Dummy2::class, $container->get('Cde'));
         $this->assertTrue($container->get('Cde') === $container['Cde']);
-
     }
 
     /**
@@ -94,7 +92,6 @@ class ContainerTest extends TestCase
         $output = ob_get_clean();
 //        $this->assertRegExp("/construct/", $output);
         $this->assertTrue(true);
-
     }
 
     /**
@@ -140,6 +137,4 @@ class ContainerTest extends TestCase
         $output = ob_get_clean();
         $this->assertRegExp('/'.addslashes(get_class($dummy)).'/', $output);
     }
-
-
 }
