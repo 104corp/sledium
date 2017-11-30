@@ -4,6 +4,7 @@
 namespace Apim\Framework\Tests;
 
 
+use Apim\Framework\Config;
 use Apim\Framework\Container;
 use Apim\Framework\Tests\Fixtures\Dummy1;
 use Apim\Framework\Tests\Fixtures\Dummy1ServiceProvider;
@@ -86,6 +87,12 @@ class ContainerTest extends TestCase
             'ContainerTest',
             'registerConfiguredProvidersShouldWork'
         ]);
+        $container = new Container($basePath);
+        $container->instance('config', new Config($container->configPath()));
+        ob_start();
+        $container->registerConfiguredProviders();
+        $output = ob_get_clean();
+//        $this->assertRegExp("/construct/", $output);
         $this->assertTrue(true);
 
     }
@@ -95,12 +102,14 @@ class ContainerTest extends TestCase
      */
     public function registerDeferredProviderShouldWork()
     {
+        //boot at start
         $container = new Container(__DIR__);
+        $container->boot();
         ob_start();
         $container->registerDeferredProvider(Dummy1ServiceProvider::class, 'dummy1');
         $output = ob_get_clean();
         $this->assertEmpty($output);
-        $container->boot();
+
         ob_start();
         $container->get('dummy1');
         $output = ob_get_clean();
@@ -108,6 +117,26 @@ class ContainerTest extends TestCase
         $container->registerDeferredProvider(Dummy2ServiceProvider::class, 'dummy2');
         ob_start();
         $dummy = $container->get('dummy2');
+        $output = ob_get_clean();
+        $this->assertRegExp('/'.addslashes(get_class($dummy)).'/', $output);
+
+        //boot at after
+        $container = new Container(__DIR__);
+        ob_start();
+        $container->registerDeferredProvider(Dummy1ServiceProvider::class, 'dummy1');
+        $output = ob_get_clean();
+        $this->assertEmpty($output);
+        ob_start();
+        $container->get('dummy1');
+        $output = ob_get_clean();
+        $this->assertRegExp("/construct/", $output);
+        $container->registerDeferredProvider(Dummy2ServiceProvider::class, 'dummy2');
+        ob_start();
+        $dummy = $container->get('dummy2');
+        $output = ob_get_clean();
+        $this->assertEmpty($output);
+        ob_start();
+        $container->boot();
         $output = ob_get_clean();
         $this->assertRegExp('/'.addslashes(get_class($dummy)).'/', $output);
     }
