@@ -461,7 +461,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
      * @param $provider
      * @return ServiceProvider|null
      */
-    public function getProvider($provider): ?ServiceProvider
+    public function getProvider($provider)
     {
         if (!is_string($provider)) {
             $provider = get_class($provider);
@@ -576,7 +576,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
     /**
      * @param bool $isBooting
      */
-    protected function fireAppBootCallbacks(bool $isBooting = true): void
+    protected function fireAppBootCallbacks(bool $isBooting = true)
     {
         foreach (($isBooting ? $this->bootingCallbacks : $this->bootedCallbacks) as $callback) {
             call_user_func($callback, $this);
@@ -587,7 +587,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
      * @param callable $callback
      * @param bool $isBooting
      */
-    protected function addBootCallbacks(callable $callback, bool $isBooting = true): void
+    protected function addBootCallbacks(callable $callback, bool $isBooting = true)
     {
         if ($isBooting) {
             $this->bootingCallbacks[] = $callback;
@@ -611,7 +611,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
     /**
      * @param ServiceProvider $serviceProvider
      */
-    protected function markAsRegistered(ServiceProvider $serviceProvider): void
+    protected function markAsRegistered(ServiceProvider $serviceProvider)
     {
         $this->loadedProviders[get_class($serviceProvider)] = $serviceProvider;
     }

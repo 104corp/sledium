@@ -182,7 +182,7 @@ class Config implements \ArrayAccess, ConfigContract
      * @param string $fileName
      * @return Collection|null
      */
-    private function loadConfig(string $fileName):?Collection
+    private function loadConfig(string $fileName)
     {
         $conf = include $fileName;
         return is_array($conf) || $conf instanceof \ArrayAccess ? new Collection($conf) : null;

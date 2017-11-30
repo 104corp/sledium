@@ -264,7 +264,7 @@ class ConsoleApp implements IlluminateConsoleKernel
      * Handle an uncaught exception instance.
      * @param \Throwable $e
      */
-    protected function handleUncaughtException(\Throwable $e): void
+    protected function handleUncaughtException(\Throwable $e)
     {
         $this->handleError($this->getOutput(), $e);
     }
