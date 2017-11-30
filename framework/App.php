@@ -4,6 +4,7 @@
 namespace Apim\Framework;
 
 use Apim\Framework\ServiceProviders\HttpServiceProvider;
+use Illuminate\Support\Collection;
 use Slim\App as SlimApp;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,6 +16,15 @@ use Apim\Framework\Handlers\IlluminateExceptionHandler;
  */
 class App extends SlimApp
 {
+    private $defaultSettings = [
+        'httpVersion' => '1.1',
+        'responseChunkSize' => 4096,
+        'outputBuffering' => 'append',
+        'determineRouteBeforeAppMiddleware' => false,
+        'displayErrorDetails' => false,
+        'addContentLengthHeader' => true,
+        'routerCacheFile' => false,
+    ];
     /**
      * App constructor.
      * @param Container $container
@@ -43,7 +53,11 @@ class App extends SlimApp
             return new Config($this->getContainer()->configPath());
         });
         $this->getContainer()->singleton('settings', function () {
-            return $this->getContainer()->get('config')->get('settings');
+            /** @var Collection $setting */
+            $setting = $this->getContainer()->get('config')->get('settings', new Collection([]));
+            $setting = new Collection(array_merge($this->defaultSettings, $setting->toArray()));
+            $this->getContainer()->get('config')->set('settings', $setting);
+            return $setting;
         });
         $this->getContainer()->registerConfiguredProviders();
         $this->getContainer()->register(HttpServiceProvider::class);
@@ -52,10 +66,10 @@ class App extends SlimApp
                 return new IlluminateExceptionHandler($container);
             };
         }
-        $this->getContainer()->alias('request','Psr\Http\Message\ServerRequestInterface');
-        $this->getContainer()->alias('request','Slim\Http\Request');
-        $this->getContainer()->alias('response','Psr\Http\Message\ResponseInterface');
-        $this->getContainer()->alias('response','Slim\Http\Response');
+        $this->getContainer()->alias('request', 'Psr\Http\Message\ServerRequestInterface');
+        $this->getContainer()->alias('request', 'Slim\Http\Request');
+        $this->getContainer()->alias('response', 'Psr\Http\Message\ResponseInterface');
+        $this->getContainer()->alias('response', 'Slim\Http\Response');
     }
 
     /**
