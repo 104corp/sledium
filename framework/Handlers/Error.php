@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Apim\Framework\Handlers;
+namespace Sledium\Handlers;
 
 use Slim\Handlers\AbstractError;
 

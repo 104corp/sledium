@@ -1,6 +1,6 @@
 <?php
-use Apim\Framework\Container;
+use Sledium\Container;
 
 return function (Container $container) {
-    return new \Apim\Framework\Tests\Fixtures\Dummy2();
+    return new \Sledium\Tests\Fixtures\Dummy2();
 };

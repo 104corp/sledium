@@ -1,9 +1,9 @@
 <?php
 
 
-namespace Apim\Framework\ServiceProviders;
+namespace Sledium\ServiceProviders;
 
-use Apim\Framework\Container;
+use Sledium\Container;
 use Illuminate\Support\ServiceProvider;
 use Slim\DefaultServicesProvider;
 use Slim\Router;

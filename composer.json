@@ -32,12 +32,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Apim\\Framework\\": "framework"
+            "Sledium\\": "framework"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Apim\\Framework\\Tests\\": "tests/"
+            "Sledium\\Tests\\": "tests/"
         }
     },
     "config": {

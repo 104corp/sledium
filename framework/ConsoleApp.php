@@ -1,12 +1,12 @@
 <?php
 
 
-namespace Apim\Framework;
+namespace Sledium;
 
-use Apim\Framework\Handlers\IlluminateExceptionHandler;
-use Apim\Framework\Registrars\ConsoleAliasRegistrar;
-use Apim\Framework\Registrars\ConsoleServicesRegistrar;
-use Apim\Framework\ServiceProviders\ConsoleServiceProvider;
+use Sledium\Handlers\IlluminateExceptionHandler;
+use Sledium\Registrars\ConsoleAliasRegistrar;
+use Sledium\Registrars\ConsoleServicesRegistrar;
+use Sledium\ServiceProviders\ConsoleServiceProvider;
 use Illuminate\Console\Application as IlluminateApplication;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Console\Kernel as IlluminateConsoleKernel;

@@ -1,13 +1,13 @@
 <?php
 
-namespace Apim\Framework\Facades;
+namespace Sledium\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
  * Class SlimApp
- * @package Apim\Framework\Facades
- * @method static \Apim\Framework\Container getContainer()
+ * @package Sledium\Facades
+ * @method static \Sledium\Container getContainer()
  * @method static \Slim\Interfaces\RouteInterface get(string $pattern, callable|string $callable)
  * @method static \Slim\Interfaces\RouteInterface post(string $pattern, callable|string $callable)
  * @method static \Slim\Interfaces\RouteInterface patch(string $pattern, callable|string $callable)

@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Apim\Framework\Testing;
+namespace Sledium\Testing;
 
 use PHPUnit\Util\InvalidArgumentHelper;
 use Slim\Http\Response as SlimResponse;
@@ -28,7 +28,7 @@ class TestResponse extends SlimResponse
      * get response body
      * @return null|string
      */
-    public function getBodyContent(): ? string
+    public function getBodyContent()
     {
         if ($this->getBody()->isSeekable()) {
             $this->getBody()->rewind();

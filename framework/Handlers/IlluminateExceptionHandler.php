@@ -1,9 +1,9 @@
 <?php
 
 
-namespace Apim\Framework\Handlers;
+namespace Sledium\Handlers;
 
-use Apim\Framework\Container;
+use Sledium\Container;
 use Exception;
 use Illuminate\Contracts\Debug\ExceptionHandler as IlluminateExceptionHandlerInterface;
 use Symfony\Component\Console\Application as SymfonyConsoleApplication;

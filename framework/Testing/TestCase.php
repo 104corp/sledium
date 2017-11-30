@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Apim\Framework\Testing;
+namespace Sledium\Testing;
 
 use PHPUnit\Framework\TestCase as PhpUnitTestCase;
 

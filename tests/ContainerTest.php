@@ -1,15 +1,15 @@
 <?php
 
 
-namespace Apim\Framework\Tests;
+namespace Sledium\Tests;
 
 
-use Apim\Framework\Config;
-use Apim\Framework\Container;
-use Apim\Framework\Tests\Fixtures\Dummy1;
-use Apim\Framework\Tests\Fixtures\Dummy1ServiceProvider;
-use Apim\Framework\Tests\Fixtures\Dummy2;
-use Apim\Framework\Tests\Fixtures\Dummy2ServiceProvider;
+use Sledium\Config;
+use Sledium\Container;
+use Sledium\Tests\Fixtures\Dummy1;
+use Sledium\Tests\Fixtures\Dummy1ServiceProvider;
+use Sledium\Tests\Fixtures\Dummy2;
+use Sledium\Tests\Fixtures\Dummy2ServiceProvider;
 use PHPUnit\Framework\TestCase;
 
 class ContainerTest extends TestCase

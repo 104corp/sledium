@@ -1,18 +1,18 @@
 <?php
 
 
-namespace Apim\Framework;
+namespace Sledium;
 
-use Apim\Framework\ServiceProviders\HttpServiceProvider;
+use Sledium\ServiceProviders\HttpServiceProvider;
 use Illuminate\Support\Collection;
 use Slim\App as SlimApp;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Apim\Framework\Handlers\IlluminateExceptionHandler;
+use Sledium\Handlers\IlluminateExceptionHandler;
 
 /**
  * Class App
- * @package Apim\Framework
+ * @package Sledium
  */
 class App extends SlimApp
 {

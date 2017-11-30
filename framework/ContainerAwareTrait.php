@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Apim\Framework;
+namespace Sledium;
 
 trait ContainerAwareTrait
 {

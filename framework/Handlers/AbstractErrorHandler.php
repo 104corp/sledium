@@ -1,9 +1,9 @@
 <?php
 
 
-namespace Apim\Framework\Handlers;
+namespace Sledium\Handlers;
 
-use Apim\Framework\Container;
+use Sledium\Container;
 use Illuminate\Contracts\Debug\ExceptionHandler as IlluminateExceptionHandlerInterface;
 
 abstract class AbstractErrorHandler

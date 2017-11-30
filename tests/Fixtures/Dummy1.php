@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Apim\Framework\Tests\Fixtures;
+namespace Sledium\Tests\Fixtures;
 
 
 class Dummy1

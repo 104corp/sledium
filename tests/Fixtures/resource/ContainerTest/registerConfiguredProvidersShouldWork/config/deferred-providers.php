@@ -1,4 +1,4 @@
 <?php
 return [
-  'dummy2' => \Apim\Framework\Tests\Fixtures\Dummy2ServiceProvider::class
+  'dummy2' => \Sledium\Tests\Fixtures\Dummy2ServiceProvider::class
 ];

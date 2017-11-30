@@ -1,10 +1,10 @@
 <?php
 
 
-namespace Apim\Framework\Testing;
+namespace Sledium\Testing;
 
 use InvalidArgumentException;
-use Apim\Framework\App;
+use Sledium\App;
 use Slim\Http\Environment;
 use Slim\Http\Request;
 use Slim\Http\RequestBody;

@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Apim\Framework;
+namespace Sledium;
 
 use Illuminate\Contracts\Config\Repository as ConfigContract;
 use Illuminate\Support\Collection;

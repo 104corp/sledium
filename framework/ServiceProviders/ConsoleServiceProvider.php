@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Apim\Framework\ServiceProviders;
+namespace Sledium\ServiceProviders;
 
 use Illuminate\Support\Composer;
 use Illuminate\Support\ServiceProvider;

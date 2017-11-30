@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Apim\Framework;
+namespace Sledium;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;

@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Apim\Framework;
+namespace Sledium;
 
 use Closure;
 use Illuminate\Support\Facades\Facade;
@@ -13,7 +13,7 @@ use Psr\Container\ContainerInterface as PsrContainerInterface;
 /**
  * let ArrayAccess setter default singleton and implements IlluminateApplication
  * Class Container
- * @package Apim\Framework
+ * @package Sledium
  */
 class Container extends IlluminateContainer implements IlluminateApplication
 {
@@ -666,7 +666,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
     {
         foreach ([
                      'app' => [
-                         'Apim\Framework\Container',
+                         'Sledium\Container',
                          'Illuminate\Contracts\Container\Container',
                          'Illuminate\Contracts\Foundation\Application',
                          'Psr\Container\ContainerInterface'
@@ -681,7 +681,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
                      ],
                      'config' => [
                          'Illuminate\Config\Repository',
-                         'Apim\Framework\Config',
+                         'Sledium\Config',
                      ],
                      'encrypter' => [
                          'Illuminate\Encryption\Encrypter',
@@ -742,7 +742,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
                      ],
                      'exception.handler' => [
                          'Illuminate\Contracts\Debug\ExceptionHandler',
-                         'Apim\Framework\Handlers\IlluminateExceptionHandler',
+                         'Sledium\Handlers\IlluminateExceptionHandler',
                      ],
 
                  ] as $key => $aliases) {
