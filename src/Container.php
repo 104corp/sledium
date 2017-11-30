@@ -411,7 +411,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
         $config = $this->get('config');
         $deferredProviders = $config->get('deferred-providers', []);
         foreach ($deferredProviders as $service => $provider) {
-            $this->registerDeferredProvider($service, $provider);
+            $this->registerDeferredProvider($provider, $service);
         }
         $providers = $config->get('providers', []);
         foreach ($providers as $provider) {

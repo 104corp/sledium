@@ -7,7 +7,6 @@ use Illuminate\Support\ServiceProvider;
 
 class Dummy1ServiceProvider extends ServiceProvider
 {
-
     public function register()
     {
         $this->app->singleton('dummy1', function () {
