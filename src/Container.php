@@ -649,7 +649,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
                      'filesystem.disk' => 'Illuminate\Filesystem\FilesystemServiceProvider',
                      'filesystem.cloud' => 'Illuminate\Filesystem\FilesystemServiceProvider',
                      'hash' => 'Illuminate\Hashing\HashServiceProvider',
-                     'log' => 'Illuminate\Log\LogServiceProvider',
+                     'log' => 'Sledium\ServiceProviders\LogServiceProvider',
                      'mailer' => 'Illuminate\Mail\MailServiceProvider',
                      'migrator' => 'Illuminate\Database\MigrationServiceProvider',
                      'queue' => 'Illuminate\Queue\QueueServiceProvider',
