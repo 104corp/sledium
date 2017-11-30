@@ -1,6 +1,7 @@
 {
-    "name": "104corp/apim-framework",
-    "description": "APIM Framework ",
+    "name": "104corp/sledium",
+    "description": "The medium framework with Slim and Laravel.",
+    "keywords": ["slim", "laravel", "framework"],
     "license": "104 Corporation. All rights reserved.",
     "authors": [
         {
