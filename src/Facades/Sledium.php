@@ -5,7 +5,7 @@ namespace Sledium\Facades;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * Class SlimApp
+ * Class Sledium
  * @package Sledium\Facades
  * @method static \Sledium\Container getContainer()
  * @method static \Slim\Interfaces\RouteInterface get(string $pattern, callable|string $callable)
@@ -18,10 +18,10 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Slim\Interfaces\RouteGroupInterface group(string $pattern, callable $callable)
  * @method static \Slim\App add(callable|string $callable)
  */
-class SlimApp extends Facade
+class Sledium extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return 'slim';
+        return 'sledium';
     }
 }

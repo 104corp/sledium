@@ -411,7 +411,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
         $config = $this->get('config');
         $deferredProviders = $config->get('deferred-providers', []);
         foreach ($deferredProviders as $service => $provider) {
-            $this->registerDeferredProvider($service, $provider);
+            $this->registerDeferredProvider($provider, $service);
         }
         $providers = $config->get('providers', []);
         foreach ($providers as $provider) {
@@ -649,7 +649,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
                      'filesystem.disk' => 'Illuminate\Filesystem\FilesystemServiceProvider',
                      'filesystem.cloud' => 'Illuminate\Filesystem\FilesystemServiceProvider',
                      'hash' => 'Illuminate\Hashing\HashServiceProvider',
-                     'log' => 'Illuminate\Log\LogServiceProvider',
+                     'log' => 'Sledium\ServiceProviders\LogServiceProvider',
                      'mailer' => 'Illuminate\Mail\MailServiceProvider',
                      'migrator' => 'Illuminate\Database\MigrationServiceProvider',
                      'queue' => 'Illuminate\Queue\QueueServiceProvider',

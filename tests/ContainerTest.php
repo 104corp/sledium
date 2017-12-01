@@ -57,13 +57,7 @@ class ContainerTest extends TestCase
      */
     public function dependenceFolderShouldWork()
     {
-        $basePath = implode(DIRECTORY_SEPARATOR, [
-            __DIR__,
-            'Fixtures',
-            'resource',
-            'ContainerTest',
-            'dependenceFolderShouldWork'
-        ]);
+        $basePath = $this->getFixtureBasePath('dependenceFolderShouldWork');
         $container = new Container($basePath);
         $this->assertInstanceOf(Dummy1::class, $container->get('Abc'));
         $this->assertInstanceOf(Dummy1::class, $container['Abc']);
@@ -78,20 +72,20 @@ class ContainerTest extends TestCase
      */
     public function registerConfiguredProvidersShouldWork()
     {
-        $basePath = implode(DIRECTORY_SEPARATOR, [
-            __DIR__,
-            'Fixtures',
-            'resource',
-            'ContainerTest',
-            'registerConfiguredProvidersShouldWork'
-        ]);
+        $basePath = $this->getFixtureBasePath('registerConfiguredProvidersShouldWork');
         $container = new Container($basePath);
+        $container->boot();
         $container->instance('config', new Config($container->configPath()));
         ob_start();
         $container->registerConfiguredProviders();
         $output = ob_get_clean();
-//        $this->assertRegExp("/construct/", $output);
-        $this->assertTrue(true);
+        $this->assertEmpty($output);
+        ob_start();
+        $dummy1 = $container['dummy1'];
+        $dummy2 = $container['dummy2'];
+        $output = ob_get_clean();
+        $this->assertRegExp("/construct/", $output);
+        $this->assertRegExp('/'.addslashes(get_class($dummy2)).'/', $output);
     }
 
     /**
@@ -136,5 +130,16 @@ class ContainerTest extends TestCase
         $container->boot();
         $output = ob_get_clean();
         $this->assertRegExp('/'.addslashes(get_class($dummy)).'/', $output);
+    }
+
+    private function getFixtureBasePath($path = null)
+    {
+        $basePath = implode(DIRECTORY_SEPARATOR, [
+            __DIR__,
+            'Fixtures',
+            'resources',
+            'ContainerTest'
+        ]);
+        return realpath($basePath . ($path === null ? '' : DIRECTORY_SEPARATOR . $path));
     }
 }
