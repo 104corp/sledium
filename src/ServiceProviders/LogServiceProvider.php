@@ -45,6 +45,13 @@ class LogServiceProvider extends ServiceProvider
             if (!$hasHandler) {
                 $writer->useFiles($this->getLogFolderPath() . DIRECTORY_SEPARATOR . 'sledium.log', $defaultLevel);
             }
+            $processors = $this->getLoggerConfig()->get('processors', []);
+            foreach ($processors as $processor) {
+                if (!is_callable($processor)) {
+                    $processor = $this->app->make($processor);
+                }
+                $writer->getMonolog()->pushProcessor($processor);
+            }
             return $writer;
         });
     }

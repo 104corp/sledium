@@ -32,5 +32,8 @@ return [
         [
             'handler' => 'Monolog\Handler\NullHandler',
         ],
+    ],
+    'processors' => [
+        Monolog\Processor\ProcessIdProcessor::class
     ]
 ];
