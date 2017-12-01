@@ -89,5 +89,4 @@ class TestResponse extends SlimResponse
         Assert::assertJsonStringEqualsJsonString($expectJsonString, $body);
         return $this;
     }
-
 }

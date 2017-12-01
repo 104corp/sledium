@@ -45,7 +45,7 @@ class TestClient
      * @param bool $https
      * @param array $env
      */
-    public function __construct(App $app,bool $https = false, array $env = [])
+    public function __construct(App $app, bool $https = false, array $env = [])
     {
 
         $this->app = $app;
@@ -185,5 +185,4 @@ class TestClient
             ob_end_clean();
         }
     }
-
 }

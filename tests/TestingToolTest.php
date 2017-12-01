@@ -3,7 +3,6 @@
 
 namespace Sledium\Tests;
 
-
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Sledium\App;
@@ -29,15 +28,20 @@ class TestingToolTest extends TestCase
     {
         $client = $this->getClient();
         $app = $client->getApp();
-        $app->map(['GET', 'DELETE', 'OPTIONS', 'HEAD'], '/',
+        $app->map(
+            ['GET', 'DELETE', 'OPTIONS', 'HEAD'],
+            '/',
             function (ServerRequestInterface $request, ResponseInterface $response) {
                 echo $request->getMethod();
             }
         );
-        $app->map(['POST', 'PATCH', 'PUT'], '/',
+        $app->map(
+            ['POST', 'PATCH', 'PUT'],
+            '/',
             function (ServerRequestInterface $request, ResponseInterface $response) {
                 return $response->withBody($request->getBody());
-            });
+            }
+        );
 
         $client->get('/')
             ->assertStatus(200)

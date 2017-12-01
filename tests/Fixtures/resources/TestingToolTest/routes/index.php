@@ -1,4 +1,3 @@
 <?php
-\Sledium\Facades\Sledium::get('/', function(){
-
+\Sledium\Facades\Sledium::get('/', function () {
 });
