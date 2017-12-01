@@ -45,7 +45,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
     /** @var  ServiceProvider[] */
     protected $loadedProviders = [];
     /** @var string[] */
-    protected $deferredServices = [];
+    protected $deferredProviders = [];
     /** @var  string */
     protected $environment;
     /** @var  bool */
@@ -319,7 +319,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
      */
     public function bound($abstract)
     {
-        return isset($this->deferredServices[$abstract]) || parent::bound($abstract)
+        return isset($this->deferredProviders[$abstract]) || parent::bound($abstract)
             ? true : $this->resolveInDependenciesPath($abstract);
     }
 
@@ -330,12 +330,12 @@ class Container extends IlluminateContainer implements IlluminateApplication
      */
     public function resolve($abstract, $parameters = [])
     {
+        $abstract = $this->getAlias($abstract);
+        if (isset($this->deferredProviders[$abstract]) && !isset($this->instances[$abstract])) {
+            $this->loadDeferredProvider($abstract);
+        }
         if (!parent::bound($abstract)) {
-            if (isset($this->deferredServices[$abstract])) {
-                $this->loadDeferredProvider($abstract);
-            } else {
-                $this->resolveInDependenciesPath($abstract);
-            }
+            $this->resolveInDependenciesPath($abstract);
         }
         return parent::resolve($abstract, $parameters);
     }
@@ -479,7 +479,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
     public function registerDeferredProvider($provider, $service = null)
     {
         if ($service) {
-            $this->setDeferredService($provider, $service);
+            $this->addDeferredProvider($provider, $service);
         }
     }
 
@@ -487,9 +487,9 @@ class Container extends IlluminateContainer implements IlluminateApplication
      * @param string $provider
      * @param string $service
      */
-    protected function setDeferredService(string $provider, string $service)
+    protected function addDeferredProvider(string $provider, string $service)
     {
-        $this->deferredServices[$service] = $provider;
+        $this->deferredProviders[$service] = $provider;
     }
 
     /**
@@ -500,7 +500,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
      */
     public function loadDeferredProvider($service)
     {
-        if (false === ($provider = ($this->deferredServices[$service] ?? false))) {
+        if (false === ($provider = ($this->deferredProviders[$service] ?? false))) {
             return;
         }
         if (!$this->isLoadedProvider($provider)) {
@@ -569,7 +569,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
         $this->bootedCallbacks = [];
         $this->bootingCallbacks = [];
         $this->loadedProviders = [];
-        $this->deferredServices = [];
+        $this->deferredProviders = [];
         $this->init();
     }
 
