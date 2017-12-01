@@ -38,8 +38,34 @@ class TestResponse extends SlimResponse
     }
 
     /**
-     * assert response http status code
+     * @param string $expectedContainStr
+     * @return $this
+     */
+    public function assertSee(string $expectedContainStr)
+    {
+        if (!empty($expectedContainStr)) {
+            $body = $this->getBodyContent();
+            Assert::assertRegExp("/" . addslashes($expectedContainStr) . "/", $body);
+        }
+        return $this;
+    }
+
+    /**
+     * @param string $expectedBody
+     * @return $this
+     */
+    public function assertBody(string $expectedBody)
+    {
+        $body = $this->getBodyContent();
+        Assert::assertEquals($expectedBody, $body);
+        return $this;
+    }
+
+
+    /**
+     * assert response status code
      * @param int $expectedCode
+     * @return static
      */
     public function assertStatus(int $expectedCode)
     {
@@ -48,71 +74,20 @@ class TestResponse extends SlimResponse
             $this->getStatusCode(),
             "Expected Status is '$expectedCode', but '" . $this->getStatusCode() . "'got"
         );
+        return $this;
     }
 
     /**
      * assert response json
      * @param array $expected
+     * @return static
      */
     public function assertJson(array $expected)
     {
         $body = $this->getBodyContent();
         $expectJsonString = json_encode($expected);
         Assert::assertJsonStringEqualsJsonString($expectJsonString, $body);
+        return $this;
     }
 
-    /**
-     * assert response json structure
-     * @param array $expectedStructure
-     */
-    public function assertJsonStructure(array $expectedStructure)
-    {
-        $body = $this->getBodyContent();
-        $data = json_decode($body, true);
-        $jsonError = json_last_error_msg();
-        Assert::assertEmpty($jsonError, $jsonError);
-        Assert::assertTrue(is_array($data), "Response is not structured json, \n {$body}");
-        $this->assertArrayStructureStack($expectedStructure, $data);
-    }
-
-    /**
-     * assert array structure with given array
-     * @param array $expectStructure
-     * @param mixed $actual
-     */
-    public function assertArrayStructure(array $expectStructure, $actual)
-    {
-        Assert::assertTrue(is_array($actual), 'Actual data is not Array');
-        $this->assertArrayStructureStack($expectStructure, $actual);
-    }
-
-    private function assertArrayStructureStack(array $expectStructure, $actual, $stack = '')
-    {
-        foreach ($expectStructure as $key => $value) {
-            $currentStack = empty($stack) ? $key : $stack . '.' . $value;
-            Assert::assertArrayHasKey($value, $actual, "Missing structure " . $currentStack);
-            if (is_array($value)) {
-                $this->assertArrayStructureStack($value, $actual[$key], empty($stack) ? $key : $stack . '.' . $key);
-            } else {
-                if (!is_numeric($value) && !empty($value) && is_string($value)) {
-                    $this->assertType($value, $actual[$key], $currentStack);
-                }
-            }
-        }
-    }
-
-    private function assertType(string $expectedTypeName, $actualData, $prefix)
-    {
-        $typeCheckFuncName = 'is_' . strtolower($expectedTypeName);
-        if (!function_exists($typeCheckFuncName)) {
-            throw InvalidArgumentHelper::factory(
-                1,
-                "unknow type '{$expectedTypeName}'"
-            );
-        }
-        Assert::assertTrue(
-            (bool)call_user_func($typeCheckFuncName, $actualData),
-            $prefix . ' that is not \'' . $expectedTypeName . '\', Actually it is \'' . gettype($actualData) . '\''
-        );
-    }
 }

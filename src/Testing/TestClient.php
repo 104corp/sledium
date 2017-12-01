@@ -41,11 +41,14 @@ class TestClient
 
     /**
      * TestClient constructor.
+     * @param App $app
      * @param bool $https
      * @param array $env
      */
-    public function __construct(bool $https = false, array $env = [])
+    public function __construct(App $app,bool $https = false, array $env = [])
     {
+
+        $this->app = $app;
         $this->setHttps($https);
         $this->setEnv($env);
     }
@@ -62,15 +65,6 @@ class TestClient
 
     public function getApp()
     {
-        if (null === $this->app) {
-            $configPath = __DIR__ . '/../../config';
-            $this->obLevel = ob_get_level();
-            $app = new App($configPath);
-            require __DIR__ . '/../../include/dependencies.php';
-            require __DIR__ . '/../../include/middleware.php';
-            require __DIR__ . '/../../include/routes.php';
-            $this->app = $app;
-        }
         return $this->app;
     }
 
@@ -159,7 +153,22 @@ class TestClient
             $requestBody->write($rawBody);
             $request = $request->withBody($requestBody);
         }
+        $this->obLevel = ob_get_level();
+        ob_start();
         $response = $this->getApp()->process($request, new TestResponse());
+        $output = ob_get_clean();
+        if (!empty($output) && $response->getBody()->isWritable()) {
+            $setting = $this->getApp()->getContainer()->get('settings');
+            if (isset($setting['outputBuffering'])) {
+                if ($setting['outputBuffering'] === 'prepend') {
+                    $body = new \Slim\Http\Body(fopen('php://temp', 'r+'));
+                    $body->write($output . $response->getBody());
+                    $response = $response->withBody($body);
+                } elseif ($setting['outputBuffering'] === 'append') {
+                    $response->getBody()->write($output);
+                }
+            }
+        }
         $this->alignObLevel();
         return TestResponse::buildFromSlimResponse($response);
     }
@@ -176,4 +185,5 @@ class TestClient
             ob_end_clean();
         }
     }
+
 }
