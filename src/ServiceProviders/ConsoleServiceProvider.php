@@ -26,6 +26,10 @@ use Illuminate\Database\Console\Migrations\StatusCommand as MigrateStatusCommand
 use Illuminate\Database\Console\Migrations\InstallCommand as MigrateInstallCommand;
 use Illuminate\Database\Console\Migrations\RefreshCommand as MigrateRefreshCommand;
 use Illuminate\Database\Console\Migrations\RollbackCommand as MigrateRollbackCommand;
+use Sledium\Container;
+use Sledium\Handlers\DefaultErrorRenderer;
+use Sledium\Handlers\DefaultErrorReporter;
+use Sledium\Handlers\IlluminateExceptionHandler;
 
 class ConsoleServiceProvider extends ServiceProvider
 {
@@ -80,6 +84,24 @@ class ConsoleServiceProvider extends ServiceProvider
         $this->app->singleton('composer', function ($app) {
             return new Composer($app['files'], $app->basePath());
         });
+        if (!$this->app->has('errorReporter')) {
+            $this->app['errorReporter'] = function (Container $container) {
+                return new DefaultErrorReporter($container->get('Psr\Log\LoggerInterface'));
+            };
+        }
+        if (!$this->app->has('Illuminate\Contracts\Debug\ExceptionHandler')) {
+            $container['Illuminate\Contracts\Debug\ExceptionHandler'] = function (Container $container) {
+                /** @var DefaultErrorRenderer $errorRenderer */
+                $errorRenderer = $container->make(DefaultErrorRenderer::class);
+                /** @var DefaultErrorReporter $errorReporter */
+                $errorReporter = $container->make('errorReporter');
+                $handler = new IlluminateExceptionHandler($errorRenderer, $errorReporter);
+                if (is_callable([$handler, 'setDefaultRenderContentType'])) {
+                    call_user_func([$handler, 'setDefaultRenderContentType'], 'text/html');
+                }
+                return $handler;
+            };
+        }
         $this->registerCommands(array_merge(
             $this->commands,
             $this->devCommands
@@ -135,13 +157,8 @@ class ConsoleServiceProvider extends ServiceProvider
     protected function registerMigrateMakeCommand()
     {
         $this->app->singleton('command.migrate.make', function ($app) {
-            // Once we have the migration creator registered, we will create the command
-            // and inject the creator. The creator is responsible for the actual file
-            // creation of the migrations, and may be extended by these developers.
             $creator = $app['migration.creator'];
-
             $composer = $app['composer'];
-
             return new MigrateMakeCommand($creator, $composer);
         });
     }

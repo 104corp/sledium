@@ -740,10 +740,6 @@ class Container extends IlluminateContainer implements IlluminateApplication
                          'Illuminate\Redis\RedisManager',
                          'Illuminate\Contracts\Redis\Factory'
                      ],
-                     'exception.handler' => [
-                         'Illuminate\Contracts\Debug\ExceptionHandler',
-                         'Sledium\Handlers\IlluminateExceptionHandler',
-                     ],
 
                  ] as $key => $aliases) {
             foreach ($aliases as $alias) {

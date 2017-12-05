@@ -29,7 +29,7 @@ class TestingToolTest extends TestCase
         $client = $this->getClient();
         $app = $client->getApp();
         $app->map(
-            ['GET', 'DELETE', 'OPTIONS', 'HEAD'],
+            ['GET', 'DELETE', 'HEAD', 'OPTIONS'],
             '/',
             function (ServerRequestInterface $request, ResponseInterface $response) {
                 echo $request->getMethod();
@@ -57,7 +57,6 @@ class TestingToolTest extends TestCase
 
         $client->head('/')
             ->assertStatus(200);
-
 
         $expect = ['abc' => '123'];
         $client->put('/', $expect)
