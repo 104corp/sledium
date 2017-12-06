@@ -41,11 +41,51 @@ class ErrorHandler implements ErrorHandlerInterface
     }
 
     /**
-     * @param string $defaultRenderContentType
+     * @return ErrorReporterInterface
      */
-    public function setDefaultRenderContentType(string $defaultRenderContentType)
+    public function getReporter(): ErrorReporterInterface
     {
-        $this->defaultRenderContentType = $defaultRenderContentType;
+        return $this->reporter;
+    }
+
+    /**
+     * @param ErrorReporterInterface $reporter
+     */
+    public function setReporter(ErrorReporterInterface $reporter)
+    {
+        $this->reporter = $reporter;
+    }
+
+    /**
+     * @return ErrorRendererInterface
+     */
+    public function getRenderer(): ErrorRendererInterface
+    {
+        return $this->renderer;
+    }
+
+    /**
+     * @param ErrorRendererInterface $renderer
+     */
+    public function setRenderer(ErrorRendererInterface $renderer)
+    {
+        $this->renderer = $renderer;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDisplayErrorDetails(): bool
+    {
+        return $this->displayErrorDetails;
+    }
+
+    /**
+     * @param bool $displayErrorDetails
+     */
+    public function setDisplayErrorDetails(bool $displayErrorDetails)
+    {
+        $this->displayErrorDetails = $displayErrorDetails;
     }
 
     /**
@@ -73,7 +113,6 @@ class ErrorHandler implements ErrorHandlerInterface
 
         $body = new Body(fopen('php://temp', 'r+'));
         $body->write($renderedBody);
-        $body->rewind();
         $response = $response->withStatus(200)->withBody($body);
         if ($error instanceof HttpException) {
             $response = $response->withStatus($error->getStatusCode(), $error->getStatusReasonPhrase());

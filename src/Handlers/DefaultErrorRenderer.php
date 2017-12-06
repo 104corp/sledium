@@ -18,7 +18,7 @@ class DefaultErrorRenderer implements ErrorRendererInterface
     public function render(
         \Throwable $e,
         bool $displayErrorDetails,
-        string $contentType
+        string &$contentType
     ) {
         switch ($contentType) {
             case 'application/json':
@@ -31,6 +31,7 @@ class DefaultErrorRenderer implements ErrorRendererInterface
                 break;
 
             default:
+                $contentType = 'text/html';
                 $output = $this->renderHtml($e, $displayErrorDetails);
                 break;
         }

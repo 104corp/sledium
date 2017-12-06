@@ -8,9 +8,19 @@ use Sledium\App;
 
 abstract class TestCase extends PhpUnitTestCase
 {
-    protected function getClient(bool $https = false, array $environment = []): TestClient
+    private $client;
+
+    public function tearDown()
     {
-        return new TestClient($this->createHttpApp(), $https, $environment);
+        $this->client = null;
+    }
+
+    protected function getClient(bool $https = false, array $environment = [], bool $createNew = false): TestClient
+    {
+        if (null === $this->client || $createNew) {
+            $this->client = new TestClient($this->createHttpApp(), $https, $environment);
+        }
+        return $this->client;
     }
     abstract protected function createHttpApp():App;
 }

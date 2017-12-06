@@ -3,6 +3,8 @@
 
 namespace Sledium;
 
+use Sledium\Exceptions\HttpBadRequestException;
+use Sledium\Exceptions\HttpClientException;
 use Slim\App as SlimApp;
 use FastRoute\Dispatcher;
 use Illuminate\Support\Collection;
@@ -11,6 +13,11 @@ use Sledium\ServiceProviders\HttpServiceProvider;
 use Sledium\Exceptions\HttpMethodNotAllowedException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Slim\Exception\InvalidMethodException;
+use Slim\Http\Environment;
+use Slim\Http\Headers;
+use Slim\Http\Request;
+use Slim\Http\Response;
 
 /**
  * Class App
@@ -36,6 +43,9 @@ class App extends SlimApp
         'autoHandleOptionsMethod' => true,
         'routerCacheFile' => false,
         'defaultContentType' => 'text/html',
+        'doNotReport' => [
+            HttpClientException::class,
+        ],
     ];
 
     /**
@@ -55,8 +65,11 @@ class App extends SlimApp
 
     protected function guessBasePath(): string
     {
+        if (defined('APP_BASE_PATH')) {
+            return APP_BASE_PATH;
+        }
         list($one, $two, $caller) = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
-        return dirname(dirname($caller['file']));
+        return isset($caller['file']) ? dirname(dirname($caller['file'])) : getcwd();
     }
 
     /**
@@ -108,8 +121,6 @@ class App extends SlimApp
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @return ResponseInterface
-     * @throws HttpMethodNotAllowedException
-     * @throws HttpNotFoundException
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response)
     {
@@ -118,49 +129,53 @@ class App extends SlimApp
         /** @var \Slim\Interfaces\RouterInterface $router */
         $router = $this->getContainer()->get('router');
 
-        if (null === $routeInfo || ($routeInfo['request'] !== [$request->getMethod(), (string)$request->getUri()])) {
+        try {
+            $method = $request->getMethod();
+        } catch (InvalidMethodException $e) {
+            return $this->processInvalidMethod($request, $response);
+        }
+
+        if (null === $routeInfo || ($routeInfo['request'] !== [$method, (string)$request->getUri()])) {
             $request = $this->dispatchRouterAndPrepareRoute($request, $router);
-            $routeInfo = $request->getAttribute('routeInfo');
+            $routeInfo = $request->getAttribute('routeInfo', [0 => -1]);
         }
-        if ($routeInfo[0] === Dispatcher::FOUND) {
-            $route = $router->lookupRoute($routeInfo[1]);
-            return $route->run($request, $response);
-        } elseif ($routeInfo[0] === Dispatcher::METHOD_NOT_ALLOWED) {
-            return $this->processMethodNotAllowed(
-                $request,
-                $response,
-                $routeInfo[1]
-            );
-        }
-        return $this->handleException(new HttpNotFoundException(), $request, $response);
+        return $this->processRouteInfo($request, $response, $routeInfo);
     }
 
     /**
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @return mixed|ResponseInterface
+     * @return ResponseInterface
      */
     protected function processInvalidMethod(ServerRequestInterface $request, ResponseInterface $response)
     {
         $router = $this->getContainer()->get('router');
-        if (is_callable([$request->getUri(), 'getBasePath'])
-            && is_callable([$router, 'setBasePath'])
-        ) {
+        if (is_callable([$request->getUri(), 'getBasePath']) && is_callable([$router, 'setBasePath'])) {
             $router->setBasePath($request->getUri()->getBasePath());
         }
         $request = $this->dispatchRouterAndPrepareRoute($request, $router);
-        $routeInfo = $request->getAttribute(
-            'routeInfo',
-            [0 => Dispatcher::NOT_FOUND]
-        );
-        if ($routeInfo[0] === Dispatcher::METHOD_NOT_ALLOWED) {
-            return $this->processMethodNotAllowed(
-                $request,
-                $response,
-                $routeInfo[1]
-            );
+        $routeInfo = $request->getAttribute('routeInfo', [0 => -1]);
+        return $this->processRouteInfo($request, $response, $routeInfo);
+    }
+
+    /**
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param array $routeInfo
+     * @return ResponseInterface
+     */
+    protected function processRouteInfo(ServerRequestInterface $request, ResponseInterface $response, array $routeInfo)
+    {
+        $router = $this->getContainer()->get('router');
+        if ($routeInfo[0] === Dispatcher::FOUND) {
+            $route = $router->lookupRoute($routeInfo[1]);
+            return $route->run($request, $response);
+        } elseif ($routeInfo[0] === Dispatcher::METHOD_NOT_ALLOWED) {
+            return $this->processMethodNotAllowed($request, $response, $routeInfo[1]);
+        } elseif ($routeInfo[0] === Dispatcher::NOT_FOUND) {
+            return $this->handleException(new HttpNotFoundException(), $request, $response);
         }
-        return $this->handleException(new HttpNotFoundException(), $request, $response);
+        return $this->handleException(new HttpBadRequestException(), $request, $response);
     }
 
     /**
@@ -174,9 +189,10 @@ class App extends SlimApp
         ResponseInterface $response,
         array $allowedMethods
     ) {
-        $setting = $this->getContainer()['settings'];
+        $settings = $this->getContainer()['settings'];
+
         if ($request->getMethod() === 'OPTIONS'
-            && isset($setting['autoHandleOptionsMethod'])
+            && $settings['autoHandleOptionsMethod']
             && $this->getContainer()->has('optionsMethodHandler')
             && is_callable($optionsMethodHandler = $this->getContainer()->get('optionsMethodHandler'))
         ) {
@@ -189,7 +205,7 @@ class App extends SlimApp
         $allowedMethods = implode(', ', $allowedMethods);
         return $this->handleException(
             new HttpMethodNotAllowedException(
-                'Allowed methods: ' . $allowedMethods,
+                'Method not allowed. Must be one of: ' . $allowedMethods,
                 ['Allow' => $allowedMethods]
             ),
             $request,
@@ -219,10 +235,11 @@ class App extends SlimApp
             }
         );
         register_shutdown_function(
-            function () {
+            $shoutDownFunction = function () {
                 $this->handleShutdown();
             }
         );
+        $this->getContainer()->instance('shoutDownFunction', $shoutDownFunction);
     }
 
     /**
@@ -232,8 +249,13 @@ class App extends SlimApp
     {
         restore_exception_handler();
         $container = $this->getContainer();
-        $request = $container->get('request');
-        $response = $container->get('response');
+        $request = $container->has('request')
+            ? $container->get('request')
+            : Request::createFromEnvironment(new Environment($_SERVER));
+        $response = $container->has('response')
+            ? $container->get('response')
+            : (new Response(200, new Headers(['Content-Type' => 'text/html; charset=UTF-8'])))
+                ->withProtocolVersion($container->get('settings')['httpVersion']);
         if ($e instanceof \Exception) {
             $response = $this->handleException($e, $request, $response);
         } else {
@@ -261,19 +283,14 @@ class App extends SlimApp
      */
     protected function isFatalError(int $type): bool
     {
-        $errorCodes = [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE];
-        if (defined('FATAL_ERROR')) {
-            $errorCodes[] = FATAL_ERROR;
-        }
-        return in_array($type, $errorCodes);
+        return in_array($type, [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE]);
     }
 
     /**
      * @param \Exception $e
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @return mixed
-     * @throws \Exception
+     * @return ResponseInterface
      */
     protected function handleException(\Exception $e, ServerRequestInterface $request, ResponseInterface $response)
     {
@@ -281,13 +298,10 @@ class App extends SlimApp
     }
 
     /**
-     * Call relevant handler from the Container if needed. If it doesn't exist,
-     * then just re-throw.
-     *
-     * @param  \Throwable $e
-     * @param  ServerRequestInterface $request
-     * @param  ResponseInterface $response
-     * @return ResponseInterface
+     * @param \Throwable $e
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @return mixed
      * @throws \Throwable
      */
     protected function handlePhpError(\Throwable $e, ServerRequestInterface $request, ResponseInterface $response)

@@ -30,6 +30,7 @@ class DefaultOptionsMethodHandler
             (string)$request->getHeaderLine('Accept'),
             $this->knownContentTypes
         );
+
         switch ($contentType) {
             case 'application/json':
                 $output = json_encode(['allowed' => $allowedMethods], JSON_PRETTY_PRINT);
@@ -41,12 +42,13 @@ class DefaultOptionsMethodHandler
                 break;
 
             default:
+                $contentType = 'text/html';
                 $output = $this->renderHtml($allowedMethods);
                 break;
         }
+
         $body = new Body(fopen('php://temp', 'r+'));
         $body->write($output);
-        $body->rewind();
         $allow = implode(', ', $allowedMethods);
         return $response
             ->withStatus(200)

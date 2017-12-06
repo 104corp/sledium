@@ -5,6 +5,7 @@ namespace Sledium\ServiceProviders;
 
 use Psr\Container\ContainerInterface;
 use Illuminate\Support\ServiceProvider;
+use Sledium\Exceptions\HttpClientException;
 use Sledium\Handlers\DefaultErrorRenderer;
 use Sledium\Handlers\DefaultErrorReporter;
 use Sledium\Handlers\DefaultOptionsMethodHandler;
@@ -136,7 +137,9 @@ class HttpServiceProvider extends ServiceProvider
         }
         if (!$container->has('errorReporter')) {
             $container['errorReporter'] = function (ContainerInterface $container) {
-                return new DefaultErrorReporter($container->get('Psr\Log\LoggerInterface'));
+                $reporter = new DefaultErrorReporter($container->get('Psr\Log\LoggerInterface'));
+                $reporter->setDoNotReport($container['settings']['doNotReport']);
+                return $reporter;
             };
         }
     }
@@ -161,7 +164,9 @@ class HttpServiceProvider extends ServiceProvider
     {
         if (!$container->has('optionsMethodHandler')) {
             $container['optionsMethodHandler'] = function (ContainerInterface $container) {
-                return new DefaultOptionsMethodHandler();
+                $handler = new DefaultOptionsMethodHandler();
+                $handler->setDefaultRenderContentType($this->defaultContentType());
+                return $handler;
             };
         }
     }

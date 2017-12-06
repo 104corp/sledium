@@ -15,7 +15,7 @@ interface ErrorRendererInterface
     public function render(
         \Throwable $e,
         bool $displayErrorDetails,
-        string $contentType
+        string &$contentType
     );
 
     /**

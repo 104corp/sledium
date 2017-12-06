@@ -11,7 +11,7 @@ use Illuminate\Contracts\Foundation\Application as IlluminateApplication;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
 
 /**
- * let ArrayAccess setter default singleton and implements IlluminateApplication
+ * ArrayAccess setter default singleton and implements Illuminate Application
  * Class Container
  * @package Sledium
  */

@@ -18,7 +18,7 @@ class TestResponse extends SlimResponse
         $response = new self();
         $response->status = $psrResponse->getStatusCode();
         $response->protocolVersion = $psrResponse->getProtocolVersion();
-        $response->headers = $psrResponse->getHeaders();
+        $response->headers = new \Slim\Http\Headers($psrResponse->getHeaders());
         $response->body = $psrResponse->getBody();
         $response->reasonPhrase = $psrResponse->getReasonPhrase();
         return $response;
@@ -72,7 +72,7 @@ class TestResponse extends SlimResponse
         Assert::assertEquals(
             $expectedCode,
             $this->getStatusCode(),
-            "Expected Status is '$expectedCode', but '" . $this->getStatusCode() . "'got"
+            "Expected Status is '$expectedCode', but '" . $this->getStatusCode() . "' got"
         );
         return $this;
     }
