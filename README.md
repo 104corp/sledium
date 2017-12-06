@@ -1,5 +1,7 @@
 # Slidium Framework
 
+[![codecov](https://codecov.io/gh/104corp/sledium/branch/master/graph/badge.svg)](https://codecov.io/gh/104corp/sledium)
+
 The medium framework with [Slim][] and [Laravel][].
 
 ## System requirement
