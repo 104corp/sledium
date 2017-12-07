@@ -84,24 +84,34 @@ class ConsoleServiceProvider extends ServiceProvider
         $this->app->singleton('composer', function ($app) {
             return new Composer($app['files'], $app->basePath());
         });
+
+        if (!$this->app->has('errorRenderer')) {
+            $this->app['errorRenderer'] = function (Container $container) {
+                return new DefaultErrorRenderer();
+            };
+        }
+
         if (!$this->app->has('errorReporter')) {
             $this->app['errorReporter'] = function (Container $container) {
-                return new DefaultErrorReporter($container->get('Psr\Log\LoggerInterface'));
+                $reporter = new DefaultErrorReporter($container->get('Psr\Log\LoggerInterface'));
+                $doNotReport = $container['settings']['doNotReport'] ?? [];
+                $reporter->setDoNotReport($doNotReport);
+                return $reporter;
             };
         }
-        if (!$this->app->has('Illuminate\Contracts\Debug\ExceptionHandler')) {
-            $container['Illuminate\Contracts\Debug\ExceptionHandler'] = function (Container $container) {
-                /** @var DefaultErrorRenderer $errorRenderer */
-                $errorRenderer = $container->make(DefaultErrorRenderer::class);
-                /** @var DefaultErrorReporter $errorReporter */
-                $errorReporter = $container->make('errorReporter');
-                $handler = new IlluminateExceptionHandler($errorRenderer, $errorReporter);
-                if (is_callable([$handler, 'setDefaultRenderContentType'])) {
-                    call_user_func([$handler, 'setDefaultRenderContentType'], 'text/html');
-                }
-                return $handler;
-            };
-        }
+
+        $this->app['Illuminate\Contracts\Debug\ExceptionHandler'] = function (Container $container) {
+            /** @var DefaultErrorRenderer $errorRenderer */
+            $errorRenderer = $container->make(DefaultErrorRenderer::class);
+            /** @var DefaultErrorReporter $errorReporter */
+            $errorReporter = $container->make('errorReporter');
+            $handler = new IlluminateExceptionHandler($errorRenderer, $errorReporter);
+            if (is_callable([$handler, 'setDefaultRenderContentType'])) {
+                call_user_func([$handler, 'setDefaultRenderContentType'], 'text/html');
+            }
+            return $handler;
+        };
+
         $this->registerCommands(array_merge(
             $this->commands,
             $this->devCommands
@@ -111,7 +121,7 @@ class ConsoleServiceProvider extends ServiceProvider
     /**
      * Register the given commands.
      *
-     * @param  array  $commands
+     * @param  array $commands
      * @return void
      */
     protected function registerCommands(array $commands)
@@ -122,7 +132,6 @@ class ConsoleServiceProvider extends ServiceProvider
 
         $this->commands(array_values($commands));
     }
-
 
 
     /**

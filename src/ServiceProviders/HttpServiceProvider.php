@@ -32,6 +32,7 @@ class HttpServiceProvider extends ServiceProvider
         $this->registerErrorHandler($this->app);
         $this->registerIlluminateExceptionHandler($this->app);
         $this->registerOptionsMethodHandler($this->app);
+        $this->registerCoreProviders();
     }
 
     public function provides()
@@ -168,6 +169,32 @@ class HttpServiceProvider extends ServiceProvider
                 $handler->setDefaultRenderContentType($this->defaultContentType());
                 return $handler;
             };
+        }
+    }
+
+
+    private function registerCoreProviders()
+    {
+        foreach ([
+                     'cache' => 'Illuminate\Cache\CacheServiceProvider',
+                     'cache.store' => 'Illuminate\Cache\CacheServiceProvider',
+                     'encrypter' => 'Illuminate\Encryption\EncryptionServiceProvider',
+                     'db' => 'Illuminate\Database\DatabaseServiceProvider',
+                     'db.connection' => 'Illuminate\Database\DatabaseServiceProvider',
+                     'files' => 'Illuminate\Filesystem\FilesystemServiceProvider',
+                     'filesystem' => 'Illuminate\Filesystem\FilesystemServiceProvider',
+                     'filesystem.disk' => 'Illuminate\Filesystem\FilesystemServiceProvider',
+                     'filesystem.cloud' => 'Illuminate\Filesystem\FilesystemServiceProvider',
+                     'hash' => 'Illuminate\Hashing\HashServiceProvider',
+                     'log' => 'Sledium\ServiceProviders\LogServiceProvider',
+                     'mailer' => 'Illuminate\Mail\MailServiceProvider',
+                     'queue' => 'Illuminate\Queue\QueueServiceProvider',
+                     'queue.connection' => 'Illuminate\Queue\QueueServiceProvider',
+                     'queue.failer' => 'Illuminate\Queue\QueueServiceProvider',
+                     'queue.listener' => 'Illuminate\Queue\QueueServiceProvider',
+                     'redis' => 'Illuminate\Redis\RedisServiceProvider',
+                 ] as $service => $provider) {
+            $this->app->registerDeferredProvider($provider, $service);
         }
     }
 

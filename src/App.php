@@ -55,6 +55,8 @@ class App extends SlimApp
         $container->setIsRunningInConsole(false);
         parent::__construct($container);
         $this->setPhpNativeErrorHandlers();
+        $this->registerBaseBindings();
+        $this->registerCommons();
         $this->registerServices();
     }
 
@@ -67,10 +69,7 @@ class App extends SlimApp
         return isset($caller['file']) ? dirname(dirname($caller['file'])) : getcwd();
     }
 
-    /**
-     * Register HTTP app needed services
-     */
-    protected function registerServices()
+    protected function registerBaseBindings()
     {
         $container = $this->getContainer();
         $container->instance('sledium', $this);
@@ -84,7 +83,21 @@ class App extends SlimApp
             $this->getContainer()->get('config')->set('settings', $setting);
             return $setting;
         });
+    }
 
+    /**
+     * Register Common services and aliases
+     */
+    protected function registerCommons()
+    {
+        (new CommonServicesRegisterer($this->getContainer()))->register();
+    }
+
+    /**
+     * Register HTTP app needed services
+     */
+    protected function registerServices()
+    {
         $this->getContainer()->registerConfiguredProviders();
         $this->getContainer()->register(HttpServiceProvider::class);
         $this->getContainer()->alias('request', 'Psr\Http\Message\ServerRequestInterface');
