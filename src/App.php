@@ -216,7 +216,7 @@ class App extends SlimApp
         $errorReporting = error_reporting();
         error_reporting(0);
         set_error_handler(
-            function ($level, $message, $file = '', $line = 0) use ($errorReporting){
+            function ($level, $message, $file = '', $line = 0) use ($errorReporting) {
                 if ($errorReporting & $level) {
                     error_clear_last();
                     throw new \ErrorException($message, 0, $level, $file, $line);
