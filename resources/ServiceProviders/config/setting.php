@@ -7,6 +7,10 @@ return [
     'determineRouteBeforeAppMiddleware' => false,
     'displayErrorDetails' => false,
     'addContentLengthHeader' => true,
+    'autoHandleOptionsMethod' => true,
     'routerCacheFile' => false,
     'defaultContentType' => 'text/html',
+    'doNotReport' => [
+        'Sledium\Exceptions\HttpClientException',
+    ],
 ];
