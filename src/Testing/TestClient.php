@@ -198,7 +198,13 @@ class TestClient
         $app->getContainer()->instance('environment', $environment);
         $app->getContainer()->instance('request', $request);
         $app->getContainer()->instance('response', new TestResponse());
-        return TestResponse::buildFromSlimResponse($app->run(true));
+        try {
+            ob_start();
+            $response = TestResponse::buildFromSlimResponse($app->run(true));
+        } finally {
+            ob_get_clean();
+        }
+        return $response;
     }
 
     protected function createEnvironment(string $method, string $requestUri, bool $https, array $httpHeaders = [])
