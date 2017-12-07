@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<ruleset name="APIM coding standard">
-    <description>APIM coding standard</description>
+<ruleset name="Slidium coding standard">
+    <description>Slidium coding standard</description>
 
     <!-- display progress and sniff -->
     <arg value="p"/>
