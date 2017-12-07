@@ -26,11 +26,6 @@ use Slim\Http\Response;
 class App extends SlimApp
 {
     /**
-     * @var int php error reporting
-     */
-    private $errorReporting = -1;
-
-    /**
      * @var array default settings
      */
     private $defaultSettings = [
@@ -218,11 +213,11 @@ class App extends SlimApp
      */
     protected function setPhpNativeErrorHandlers()
     {
-        $this->errorReporting = error_reporting();
+        $errorReporting = error_reporting();
         error_reporting(0);
         set_error_handler(
-            function ($level, $message, $file = '', $line = 0) {
-                if ($this->errorReporting & $level) {
+            function ($level, $message, $file = '', $line = 0) use ($errorReporting){
+                if ($errorReporting & $level) {
                     error_clear_last();
                     throw new \ErrorException($message, 0, $level, $file, $line);
                 }
