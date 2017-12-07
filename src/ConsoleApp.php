@@ -111,7 +111,7 @@ class ConsoleApp implements IlluminateConsoleKernel
 
     /**
      * Queue an Artisan console command by name.
-     *
+     * @TODO
      * @param  string $command
      * @param  array $parameters
      * @return \Illuminate\Foundation\Bus\PendingDispatch
@@ -238,11 +238,6 @@ class ConsoleApp implements IlluminateConsoleKernel
         });
         $this->getContainer()->registerConfiguredProviders();
         $this->getContainer()->register(ConsoleServiceProvider::class);
-        if (!$this->container->has('exception.handler')) {
-            $this->container['exception.handler'] = function ($container) {
-                return new IlluminateExceptionHandler($container);
-            };
-        }
     }
 
     /**

@@ -129,6 +129,7 @@ class TestClient
 
     public function request(string $method, string $path, string $rawBody = '', array $headers = []): TestResponse
     {
+        $this->obLevel = ob_get_level();
         $method = strtoupper($method);
         $query = '';
         if (!empty($params)) {
@@ -141,6 +142,7 @@ class TestClient
         $requestUri = ('' === $query) ? $path : $path . (preg_match("/\?.*$/", $path) ? '&' : '?') . $query;
 
         $env = array_merge([
+            'SCRIPT_NAME' => '/index.php',
             'REQUEST_METHOD' => $method,
             'REQUEST_URI' => $requestUri,
             'REQUEST_SCHEME' => $this->https ? 'https' : 'http',
@@ -153,24 +155,15 @@ class TestClient
             $requestBody->write($rawBody);
             $request = $request->withBody($requestBody);
         }
-        $this->obLevel = ob_get_level();
-        ob_start();
-        $response = $this->getApp()->process($request, new TestResponse());
-        $output = ob_get_clean();
-        if (!empty($output) && $response->getBody()->isWritable()) {
-            $setting = $this->getApp()->getContainer()->get('settings');
-            if (isset($setting['outputBuffering'])) {
-                if ($setting['outputBuffering'] === 'prepend') {
-                    $body = new \Slim\Http\Body(fopen('php://temp', 'r+'));
-                    $body->write($output . $response->getBody());
-                    $response = $response->withBody($body);
-                } elseif ($setting['outputBuffering'] === 'append') {
-                    $response->getBody()->write($output);
-                }
-            }
-        }
+        $response = new TestResponse();
+
+        $app = $this->getApp();
+        $app->getContainer()->instance('environment', $environment);
+        $app->getContainer()->instance('request', $request);
+        $app->getContainer()->instance('response', $response);
+        $response = TestResponse::buildFromSlimResponse($app->run(true));
         $this->alignObLevel();
-        return TestResponse::buildFromSlimResponse($response);
+        return $response;
     }
 
     /**
