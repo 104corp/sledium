@@ -6,6 +6,7 @@ namespace Sledium\Tests;
 use Mockery;
 use Sledium\App;
 use Sledium\Exceptions\HttpNotAcceptableException;
+use Sledium\Exceptions\HttpUnprocessableEntityException;
 use Sledium\Testing\TestCase;
 
 class SlediumAppTest extends TestCase
@@ -93,6 +94,9 @@ class SlediumAppTest extends TestCase
         $app->get('/bar', function () {
             throw new HttpNotAcceptableException('test error');
         });
+        $app->post('/bar', function () {
+            throw new HttpUnprocessableEntityException('test error', ['Content-Type'=>'application/json']);
+        });
         $response = $client->get('/foo', ['Accept' => 'application/json']);
         $response->assertStatus(500);
         $this->assertRegExp('|application/json|', $response->getHeaderLine('Content-Type'));
@@ -125,6 +129,10 @@ class SlediumAppTest extends TestCase
         $response = $client->get('/bar', ['Accept' => 'text/plain']);
         $response->assertStatus(406);
         $this->assertRegExp('|text/html|', $response->getHeaderLine('Content-Type'));
+
+        $response = $client->post('/bar', ['Accept' => 'text/xml']);
+        $response->assertStatus(422);
+        $this->assertRegExp('|application/json|', $response->getHeaderLine('Content-Type'));
     }
 
     /**
