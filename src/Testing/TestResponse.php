@@ -3,7 +3,6 @@
 
 namespace Sledium\Testing;
 
-use PHPUnit\Util\InvalidArgumentHelper;
 use Slim\Http\Response as SlimResponse;
 use PHPUnit\Framework\Assert;
 use Psr\Http\Message\ResponseInterface;

@@ -3,14 +3,11 @@
 
 namespace Sledium\Testing;
 
-use Helmich\JsonAssert\JsonAssertions;
 use PHPUnit\Framework\TestCase as PhpUnitTestCase;
 use Sledium\App;
 
 abstract class TestCase extends PhpUnitTestCase
 {
-    use JsonAssertions;
-
     private $client;
 
     public function tearDown()

@@ -110,12 +110,12 @@ class TestingToolTest extends TestCase
             'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Cookie' => $cookie
         ];
-        $params = ['abc'=>'123', 'cde' => 'bbb'];
-        $request = new PsrRequest('GET', 'https://localhost/foo/bar?'.build_query($params), $headers);
+        $params = ['abc' => '123', 'cde' => 'bbb'];
+        $request = new PsrRequest('GET', 'https://localhost/foo/bar?' . build_query($params), $headers);
         $response = $client->sendRequest($request);
         $response->assertStatus(200);
 
-        $request = new PsrRequest('PATCH', 'https://localhost/foo/bar?'.build_query($params), $headers);
+        $request = new PsrRequest('PATCH', 'https://localhost/foo/bar?' . build_query($params), $headers);
         $response = $client->sendRequest($request);
         $response->assertStatus(200);
     }
