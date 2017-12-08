@@ -4,8 +4,11 @@
 namespace Sledium\Testing;
 
 use InvalidArgumentException;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Sledium\App;
 use Slim\Http\Environment;
+use Slim\Http\Headers;
 use Slim\Http\Request;
 use Slim\Http\RequestBody;
 
@@ -16,9 +19,9 @@ use Slim\Http\RequestBody;
  * @method TestResponse delete(string $path, array $headers = [])
  * @method TestResponse head(string $path, array $headers = [])
  * @method TestResponse options(string $path, array $headers = [])
- * @method TestResponse post(string $path, array $data, array $headers = [])
- * @method TestResponse patch(string $path, array $data, array $headers = [])
- * @method TestResponse put(string $path, array $data, array $headers = [])
+ * @method TestResponse post(string $path, array $data = [], array $headers = [])
+ * @method TestResponse patch(string $path, array $data = [], array $headers = [])
+ * @method TestResponse put(string $path, array $data = [], array $headers = [])
  * @method TestResponse postJson(string $path, array $data, array $headers = [])
  * @method TestResponse patchJson(string $path, array $data, array $headers = [])
  * @method TestResponse putJson(string $path, array $data, array $headers = [])
@@ -28,7 +31,6 @@ use Slim\Http\RequestBody;
  */
 class TestClient
 {
-
     /** @var  App */
     private $app;
     /** @var bool */
@@ -37,7 +39,6 @@ class TestClient
     /** @var array */
     private $env = [];
 
-    private $obLevel = 0;
 
     /**
      * TestClient constructor.
@@ -126,56 +127,109 @@ class TestClient
         }
     }
 
-
+    /**
+     * @param string $method
+     * @param string $path
+     * @param string $rawBody
+     * @param array $headers
+     * @return TestResponse
+     */
     public function request(string $method, string $path, string $rawBody = '', array $headers = []): TestResponse
     {
-        $this->obLevel = ob_get_level();
-        $method = strtoupper($method);
-        $query = '';
-        if (!empty($params)) {
-            $query = http_build_query($params);
-        }
-        $envHeader = [];
-        foreach ($headers as $key => $val) {
-            $envHeader['HTTP_' . strtoupper(preg_replace("/-/", '_', $key))] = $val;
-        }
-        $requestUri = ('' === $query) ? $path : $path . (preg_match("/\?.*$/", $path) ? '&' : '?') . $query;
-
-        $env = array_merge([
-            'SCRIPT_NAME' => '/index.php',
-            'REQUEST_METHOD' => $method,
-            'REQUEST_URI' => $requestUri,
-            'REQUEST_SCHEME' => $this->https ? 'https' : 'http',
-            'HTTPS' => $this->https ? 'on' : 'off',
-        ], $this->env);
-        $environment = Environment::mock(array_merge($env, $envHeader));
+        $environment = $this->createEnvironment($method, $path, (bool)$this->https, $headers);
         $request = Request::createFromEnvironment($environment);
         if ('' !== $rawBody) {
             $requestBody = new RequestBody();
             $requestBody->write($rawBody);
             $request = $request->withBody($requestBody);
         }
-        $response = new TestResponse();
 
-        $app = $this->getApp();
-        $app->getContainer()->instance('environment', $environment);
-        $app->getContainer()->instance('request', $request);
-        $app->getContainer()->instance('response', $response);
-        $response = TestResponse::buildFromSlimResponse($app->run(true));
-        $this->alignObLevel();
-        return $response;
+        return $this->runApp($environment, $request);
     }
 
     /**
-     * fix phpunit ob_level issue when slim occurred error
+     * @param RequestInterface $request
+     * @return TestResponse
      */
-    private function alignObLevel()
+    public function sendRequest(RequestInterface $request): TestResponse
     {
-        while ($this->obLevel > ob_get_level()) {
+        $headers = new Headers($request->getHeaders());
+        $cookieHeaders = $request->getHeader('Cookie');
+        $cookieParams = [];
+        foreach ($cookieHeaders as $cookieHeader) {
+            $cookiePairs = preg_split('|\s*;\s*|', $cookieHeader, -1, PREG_SPLIT_NO_EMPTY);
+            foreach ($cookiePairs as $cookiePair) {
+                $cookiePair = explode("=", $cookiePair);
+                $cookieParams[$cookiePair[0]] = urldecode($cookiePair[1]??'');
+            }
+        }
+        $requestPath = $request->getUri()->getPath();
+        $requestQuery = $request->getUri()->getQuery();
+        $environment = $this->createEnvironment(
+            $request->getMethod(),
+            $requestPath . (empty($requestQuery) ? '' : '?' . $requestQuery),
+            ($request->getUri()->getScheme() == 'https'),
+            $request->getHeaders()
+        );
+        $files = [];
+        if ($request instanceof ServerRequestInterface) {
+            $files = $request->getUploadedFiles();
+        }
+        $request = new Request(
+            $request->getMethod(),
+            $request->getUri(),
+            $headers,
+            $cookieParams,
+            $environment->all(),
+            $request->getBody(),
+            $files
+        );
+        return $this->runApp($environment, $request);
+    }
+
+    /**
+     * @param Environment $environment
+     * @param ServerRequestInterface $request
+     * @return TestResponse
+     */
+    public function runApp(Environment $environment, ServerRequestInterface $request): TestResponse
+    {
+        $app = $this->getApp();
+        $app->getContainer()->instance('environment', $environment);
+        $app->getContainer()->instance('request', $request);
+        $app->getContainer()->instance('response', new TestResponse());
+        try {
             ob_start();
+            $response = TestResponse::buildFromSlimResponse($app->run(true));
+        } finally {
+            ob_get_clean();
         }
-        while ($this->obLevel < ob_get_level()) {
-            ob_end_clean();
+        return $response;
+    }
+
+    protected function createEnvironment(string $method, string $requestUri, bool $https, array $httpHeaders = [])
+    {
+        $fakeServerVar = array_merge([
+            'SCRIPT_NAME' => '/index.php',
+            'REQUEST_METHOD' => strtoupper($method),
+            'REQUEST_URI' => $requestUri,
+            'REQUEST_SCHEME' => $https ? 'https' : 'http',
+            'HTTPS' => $https ? 'on' : 'off',
+            'HTTP_HOST' => 'localhost',
+        ], $this->env);
+        return Environment::mock(array_merge($fakeServerVar, $this->convertHttpHeader($httpHeaders)));
+    }
+
+    /**
+     * @param array $httpHeaders
+     * @return array
+     */
+    protected function convertHttpHeader(array $httpHeaders): array
+    {
+        $headers = [];
+        foreach ($httpHeaders as $key => $val) {
+            $headers['HTTP_' . strtoupper(preg_replace("/-/", '_', $key))] = $val;
         }
+        return $headers;
     }
 }
