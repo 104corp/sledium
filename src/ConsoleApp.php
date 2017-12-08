@@ -3,9 +3,6 @@
 
 namespace Sledium;
 
-use Sledium\Handlers\IlluminateExceptionHandler;
-use Sledium\Registrars\ConsoleAliasRegistrar;
-use Sledium\Registrars\ConsoleServicesRegistrar;
 use Sledium\ServiceProviders\ConsoleServiceProvider;
 use Illuminate\Console\Application as IlluminateApplication;
 use Illuminate\Console\Scheduling\Schedule;
@@ -38,7 +35,10 @@ class ConsoleApp implements IlluminateConsoleKernel
     public function __construct(Container $container)
     {
         $this->container = $container;
+        $this->container->setIsRunningInConsole(true);
         $this->registerErrorHandling();
+        $this->registerBaseBindings();
+        $this->registerCommons();
         $this->registerServices();
         $this->container->booted(function () {
             $this->defineConsoleSchedule();
@@ -68,6 +68,7 @@ class ConsoleApp implements IlluminateConsoleKernel
                     $this->container->make(Dispatcher::class),
                     $this->container->version()
                 ))->resolveCommands($this->commands);
+            $this->illuminateApplication->setName('Sledium Console App');
         }
         return $this->illuminateApplication;
     }
@@ -79,7 +80,7 @@ class ConsoleApp implements IlluminateConsoleKernel
      * @param  OutputInterface $output
      * @return int
      */
-    public function handle($input, $output = null) : int
+    public function handle($input, $output = null): int
     {
         try {
             $input = $input ?: new ArgvInput();
@@ -152,7 +153,7 @@ class ConsoleApp implements IlluminateConsoleKernel
     public function getOutput()
     {
         if (null === $this->output) {
-            $this->output= new ConsoleOutput();
+            $this->output = new ConsoleOutput();
         }
         return $this->output;
     }
@@ -228,18 +229,6 @@ class ConsoleApp implements IlluminateConsoleKernel
         }
     }
 
-    protected function registerServices()
-    {
-        $this->getContainer()->singleton('config', function () {
-            return new Config($this->getContainer()->configPath());
-        });
-        $this->getContainer()->singleton('settings', function () {
-            return $this->getContainer()->get('config')->get('settings');
-        });
-        $this->getContainer()->registerConfiguredProviders();
-        $this->getContainer()->register(ConsoleServiceProvider::class);
-    }
-
     /**
      * Determine if the error type is fatal.
      * @param int $type
@@ -283,7 +272,7 @@ class ConsoleApp implements IlluminateConsoleKernel
         }
     }
 
-    private function transformToErrorException(\Throwable $e):\ErrorException
+    private function transformToErrorException(\Throwable $e): \ErrorException
     {
         $errorException = new \ErrorException($e->getMessage(), $e->getCode(), E_ERROR, $e->getFile(), $e->getLine());
         $reflectionClass = new \ReflectionClass(\Exception::class);
@@ -292,5 +281,34 @@ class ConsoleApp implements IlluminateConsoleKernel
         $traceProperty->setValue($errorException, $e->getTrace());
         $traceProperty->setAccessible(false);
         return $errorException;
+    }
+
+    protected function registerBaseBindings()
+    {
+        $this->getContainer()->singleton('config', function () {
+            return new Config($this->getContainer()->configPath());
+        });
+        $this->getContainer()->singleton('settings', function () {
+            return $this->getContainer()->get('config')->get('settings');
+        });
+    }
+
+    /**
+     * Register Common services and aliases
+     */
+    protected function registerCommons()
+    {
+        (new CommonServicesRegisterer($this->getContainer()))->register();
+    }
+
+    /**
+     * Register Console app needed services
+     */
+    protected function registerServices()
+    {
+        $container = $this->getContainer();
+        $container->registerDeferredProvider('Illuminate\Database\MigrationServiceProvider', 'migrator');
+        $container->registerConfiguredProviders();
+        $container->register(ConsoleServiceProvider::class);
     }
 }
