@@ -100,9 +100,7 @@ class ErrorHandler implements ErrorHandlerInterface
         \Throwable $error
     ): ResponseInterface {
         $this->reporter->report($error);
-
-        $contentType = $this->choseContentType($request, $response, $error);
-
+        $contentType = $this->choseContentType($request, $error);
         ob_start();
         try {
             $renderedBody = $this->renderer->render($error, $this->displayErrorDetails, $contentType);
@@ -125,21 +123,24 @@ class ErrorHandler implements ErrorHandlerInterface
         return $response->withHeader('Content-Type', $contentType);
     }
 
+    /**
+     * @param ServerRequestInterface $request
+     * @param \Throwable $error
+     * @return string
+     */
     protected function choseContentType(
         ServerRequestInterface $request,
-        ResponseInterface $response,
         \Throwable $error
     ): string {
-        if ($contentType = $response->getHeaderLine('Content-Type')) {
-            return $contentType;
-        }
-        if ($error instanceof HttpException) {
-            $headers = $error->getHeaders();
-            if (isset($headers['Content-Type'])) {
-                return is_array($headers['Content-Type'])
-                    ? implode(', ', $headers['Content-Type'])
-                    : (string)$headers['Content-Type'];
-            }
+        if ($error instanceof HttpException && isset($error->getHeaders()['Content-Type'])) {
+            $contentType = $error->getHeaders()['Content-Type'];
+            $contentType = is_array($contentType)
+                ? implode(', ', $contentType)
+                : (string)$contentType;
+            return $this->determineContentType(
+                $contentType,
+                $this->renderer->getKnownContentTypes()
+            );
         }
         return $this->determineContentType(
             $request->getHeaderLine('Accept'),

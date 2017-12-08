@@ -57,7 +57,7 @@ class DefaultErrorRenderer implements ErrorRendererInterface
     {
         if ($e instanceof HttpException) {
             $error = [
-                'message' => $e->getStatusReasonPhrase()
+                'message' => $e->getMessage()
             ];
         } else {
             $error = [
@@ -84,7 +84,7 @@ class DefaultErrorRenderer implements ErrorRendererInterface
     private function renderXml(\Throwable $e, bool $displayErrorDetails)
     {
         if ($e instanceof HttpException) {
-            $message = $e->getStatusReasonPhrase();
+            $message = $e->getMessage();
         } else {
             $message = 'Internal Server Error';
         }
@@ -116,8 +116,8 @@ class DefaultErrorRenderer implements ErrorRendererInterface
     {
         if ($e instanceof HttpException) {
             $title = $e->getStatusCode() . ' ' . $e->getStatusReasonPhrase();
-            $detailHeadLine = '<p>' . $e->getMessage() . '</p>';
-            $simpleMessage = $detailHeadLine;
+            $simpleMessage = '<p>' . $e->getMessage() . '</p>';
+            $detailHeadLine = '';
         } else {
             $title = 'Internal Server Error';
             $detailHeadLine = '<p>The application could not run because of the following error:</p>';
@@ -125,11 +125,11 @@ class DefaultErrorRenderer implements ErrorRendererInterface
         }
         if ($displayErrorDetails) {
             $html = $detailHeadLine;
-            $html .= '<h2>Details</h2>';
+            $html .= '<h3>Details</h3>';
             $html .= $this->renderHtmlThrowable($e);
 
             while ($e = $e->getPrevious()) {
-                $html .= '<h2>Previous exception</h2>';
+                $html .= '<h3>Previous exception</h3>';
                 $html .= $this->renderHtmlThrowable($e);
             }
         } else {
@@ -139,9 +139,9 @@ class DefaultErrorRenderer implements ErrorRendererInterface
             "<html><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'>" .
             "<title>%s</title><style>body{margin:0;padding:30px;font:12px/1.5 Helvetica,Arial,Verdana," .
             "sans-serif;}h1{margin:0;font-size:48px;font-weight:normal;line-height:48px;}strong{" .
-            "display:inline-block;width:65px;}</style></head><body><h1>%s</h1>%s</body></html>",
+            "display:inline-block;width:65px;}</style></head><body><h2>%s</h2>%s</body></html>",
             $title,
-            $title,
+            $simpleMessage,
             $html
         );
         return $output;
