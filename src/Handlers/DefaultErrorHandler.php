@@ -11,7 +11,12 @@ use Sledium\Interfaces\ErrorRendererInterface;
 use Sledium\Interfaces\ErrorReporterInterface;
 use Slim\Http\Body;
 
-class ErrorHandler implements ErrorHandlerInterface
+/**
+ * Default HTTP error handler
+ * Class DefaultErrorHandler
+ * @package Sledium\Handlers
+ */
+class DefaultErrorHandler implements ErrorHandlerInterface
 {
     use DetermineContentTypeAbleTrait;
 
@@ -101,6 +106,7 @@ class ErrorHandler implements ErrorHandlerInterface
     ): ResponseInterface {
         $this->reporter->report($error);
         $contentType = $this->choseContentType($request, $error);
+        $contentType = $this->determineContentType($contentType, $this->renderer->getKnownContentTypes());
         ob_start();
         try {
             $renderedBody = $this->renderer->render($error, $this->displayErrorDetails, $contentType);
@@ -134,17 +140,8 @@ class ErrorHandler implements ErrorHandlerInterface
     ): string {
         if ($error instanceof HttpException && isset($error->getHeaders()['Content-Type'])) {
             $contentType = $error->getHeaders()['Content-Type'];
-            $contentType = is_array($contentType)
-                ? implode(', ', $contentType)
-                : (string)$contentType;
-            return $this->determineContentType(
-                $contentType,
-                $this->renderer->getKnownContentTypes()
-            );
+            return is_array($contentType) ? implode(', ', $contentType) : (string)$contentType;
         }
-        return $this->determineContentType(
-            $request->getHeaderLine('Accept'),
-            $this->renderer->getKnownContentTypes()
-        );
+        return $request->getHeaderLine('Accept');
     }
 }

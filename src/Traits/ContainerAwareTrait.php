@@ -1,7 +1,9 @@
 <?php
 
 
-namespace Sledium;
+namespace Sledium\Traits;
+
+use Sledium\Container;
 
 trait ContainerAwareTrait
 {

@@ -11,6 +11,7 @@
     ],
     "require": {
         "php": ">=7.0",
+        "illuminate/bus": "^5.5",
         "illuminate/cache": "^5.5",
         "illuminate/console": "^5.5",
         "illuminate/container": "^5.5",
@@ -20,22 +21,27 @@
         "illuminate/filesystem": "^5.5",
         "illuminate/log": "^5.5",
         "illuminate/pagination": "^5.5",
+        "illuminate/pipeline": "^5.5",
         "illuminate/queue": "^5.5",
         "illuminate/redis": "^5.5",
         "illuminate/support": "^5.5",
+        "mockery/mockery": "^1.0",
+        "mtdowling/cron-expression": "^1.2",
         "slim/slim": "^3.9"
     },
     "require-dev": {
         "ext-xdebug": "*",
         "guzzlehttp/psr7": "^1.4",
-        "mockery/mockery": "dev-master",
         "phpunit/phpunit": "^6.4",
         "squizlabs/php_codesniffer": "^3.1"
     },
     "autoload": {
         "psr-4": {
             "Sledium\\": "src/"
-        }
+        },
+        "files": [
+            "src/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

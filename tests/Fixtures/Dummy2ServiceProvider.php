@@ -14,7 +14,7 @@ class Dummy2ServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->singleton('dummy2', function () {
-            return new Dummy2();
+            return new DummyForDependence2();
         });
     }
 }

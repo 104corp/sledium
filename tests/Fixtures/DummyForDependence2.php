@@ -3,7 +3,7 @@
 
 namespace Sledium\Tests\Fixtures;
 
-class Dummy1
+class DummyForDependence2
 {
 
 }

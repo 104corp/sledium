@@ -28,9 +28,6 @@ class HttpException extends \RuntimeException
         array $headers = [],
         \Throwable $previous = null
     ) {
-        if (empty($message)) {
-            $message = "$statusCode $statusReasonPhrase";
-        }
         parent::__construct($message, 0, $previous);
         $this->statusCode = $statusCode;
         $this->statusReasonPhrase = $statusReasonPhrase;

@@ -3,24 +3,29 @@
 
 namespace Sledium;
 
-use Sledium\ServiceProviders\ConsoleServiceProvider;
-use Illuminate\Console\Application as IlluminateApplication;
+use Illuminate\Console\Application;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Console\Kernel as IlluminateConsoleKernel;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Contracts\Debug\ExceptionHandler as IlluminateExceptionHandlerInterface;
+use Sledium\Traits\AppErrorHandleAwareTrait;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use Sledium\ServiceProviders\ConsoleServiceProvider;
+use Symfony\Component\Debug\Exception\FatalThrowableError;
 
+/**
+ * Class ConsoleApp
+ * @package Sledium
+ */
 class ConsoleApp implements IlluminateConsoleKernel
 {
-
+    use AppErrorHandleAwareTrait;
     /** @var  Container */
     protected $container;
-    /** @var  IlluminateApplication */
-    protected $illuminateApplication;
+    /** @var  Application */
+    protected $application;
 
     /**
      * @var array
@@ -36,7 +41,7 @@ class ConsoleApp implements IlluminateConsoleKernel
     {
         $this->container = $container;
         $this->container->setIsRunningInConsole(true);
-        $this->registerErrorHandling();
+        $this->setPhpNativeErrorHandlers();
         $this->registerBaseBindings();
         $this->registerCommons();
         $this->registerServices();
@@ -57,20 +62,20 @@ class ConsoleApp implements IlluminateConsoleKernel
 
 
     /**
-     * @return IlluminateApplication
+     * @return Application
      */
     public function getIlluminateApplication()
     {
-        if (null === $this->illuminateApplication) {
-            $this->illuminateApplication =
-                (new IlluminateApplication(
+        if (null === $this->application) {
+            $this->application =
+                (new Application(
                     $this->container,
                     $this->container->make(Dispatcher::class),
                     $this->container->version()
                 ))->resolveCommands($this->commands);
-            $this->illuminateApplication->setName('Sledium Console App');
+            $this->application->setName('Sledium Console App');
         }
-        return $this->illuminateApplication;
+        return $this->application;
     }
 
     /**
@@ -89,7 +94,7 @@ class ConsoleApp implements IlluminateConsoleKernel
             $this->container->boot();
             return (int)$this->getIlluminateApplication()->run($input, $output);
         } catch (\Throwable $e) {
-            $this->handleError($output, $e);
+            $this->handleError($e, $output);
             return 1;
         }
     }
@@ -102,11 +107,15 @@ class ConsoleApp implements IlluminateConsoleKernel
     /**
      * @param string $command
      * @param array $parameters
-     * @param null $outputBuffer
+     * @param OutputInterface|null $outputBuffer
      * @return int
      */
-    public function call($command, array $parameters = [], $outputBuffer = null)
+    public function call($command, array $parameters = [], OutputInterface $outputBuffer = null)
     {
+        $this->container->boot();
+        if ($outputBuffer !== null) {
+            $this->output = $outputBuffer;
+        }
         return $this->getIlluminateApplication()->call($command, $parameters, $outputBuffer);
     }
 
@@ -119,7 +128,7 @@ class ConsoleApp implements IlluminateConsoleKernel
      */
     public function queue($command, array $parameters = [])
     {
-        throw new \RuntimeException('Queueing commands is not supported here.');
+        throw new \RuntimeException('Queueing commands is not supported.');
     }
 
     /**
@@ -139,11 +148,14 @@ class ConsoleApp implements IlluminateConsoleKernel
      */
     public function output()
     {
-
         return $this->getIlluminateApplication()->output();
     }
 
-    public function schedule(Schedule $schedule)
+    /**
+     * To Override
+     * @param Schedule $schedule
+     */
+    protected function schedule(Schedule $schedule)
     {
     }
 
@@ -176,73 +188,31 @@ class ConsoleApp implements IlluminateConsoleKernel
      */
     protected function defineConsoleSchedule()
     {
-        $this->container->instance(Schedule::class, $schedule = new Schedule());
-        $this->schedule($schedule);
+        $this->schedule($this->container->get(Schedule::class));
     }
 
-    protected function reportException($e)
+    protected function reportException(\Throwable $e)
     {
-        $this->container[IlluminateExceptionHandlerInterface::class]->report($e);
+        $container = $this->getContainer();
+        if (!$container->has('errorReporter')) {
+            error_log($e);
+        } else {
+            $container->get('errorReporter')->report($e);
+        }
     }
 
-    protected function renderException($output, \Exception $e)
+    protected function renderException(\Throwable $e, OutputInterface $output)
     {
-        $this->container[IlluminateExceptionHandlerInterface::class]->renderForConsole($output, $e);
-    }
-
-    /**
-     * Set the error handling for the application.
-     *
-     * @return void
-     */
-    protected function registerErrorHandling()
-    {
-        error_reporting(-1);
-
-        set_error_handler(function ($level, $message, $file = '', $line = 0) {
-            if (error_reporting() & $level) {
-                error_clear_last();
-                throw new \ErrorException($message, 0, $level, $file, $line);
+        $container = $this->getContainer();
+        if (!$container->has('consoleErrorRenderer')) {
+            if ($e instanceof \Error) {
+                $e = new FatalThrowableError($e);
             }
-        });
-
-        set_exception_handler(function ($e) {
-            $this->handleUncaughtException($e);
-        });
-
-        register_shutdown_function(function () {
-            $this->handleShutdown();
-        });
-    }
-
-    /**
-     * Handle the application shutdown routine.
-     *
-     * @return void
-     */
-    protected function handleShutdown()
-    {
-        if (!is_null($error = error_get_last()) && $this->isFatalError($error['type'])) {
-            $this->handleUncaughtException(
-                new \ErrorException($error['message'], 0, $error['type'], $error['file'], $error['line'])
-            );
+            $this->getIlluminateApplication()->renderException($e, $output);
+        } else {
+            $container->get('consoleErrorRenderer')->render($e, $output);
         }
     }
-
-    /**
-     * Determine if the error type is fatal.
-     * @param int $type
-     * @return bool
-     */
-    protected function isFatalError(int $type): bool
-    {
-        $errorCodes = [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE];
-        if (defined('FATAL_ERROR')) {
-            $errorCodes[] = FATAL_ERROR;
-        }
-        return in_array($type, $errorCodes);
-    }
-
 
     /**
      * Handle an uncaught exception instance.
@@ -250,37 +220,14 @@ class ConsoleApp implements IlluminateConsoleKernel
      */
     protected function handleUncaughtException(\Throwable $e)
     {
-        $this->handleError($this->getOutput(), $e);
+        restore_exception_handler();
+        $this->handleError($e, $this->getOutput());
     }
 
-    protected function handleError(OutputInterface $output, \Throwable $e)
+    protected function handleError(\Throwable $e, OutputInterface $output)
     {
-        $container = $this->getContainer();
-        $errorHandler = $container->has('errorHandler') ? $container->get('errorHandler')
-            : function (\Exception $e, OutputInterface $output) {
-                $this->getIlluminateApplication()->renderException($e, $output);
-            };
-        $phpErrorHandler = $container->has('phpErrorHandler') ? $container->get('phpErrorHandler')
-            : function (\Throwable $e, OutputInterface $output) use ($errorHandler) {
-                $errorHandler($this->transformToErrorException($e), $output);
-            };
-
-        if ($e instanceof \Exception) {
-            $errorHandler($e, $output);
-        } else {
-            $phpErrorHandler($e, $output);
-        }
-    }
-
-    private function transformToErrorException(\Throwable $e): \ErrorException
-    {
-        $errorException = new \ErrorException($e->getMessage(), $e->getCode(), E_ERROR, $e->getFile(), $e->getLine());
-        $reflectionClass = new \ReflectionClass(\Exception::class);
-        $traceProperty = $reflectionClass->getProperty('trace');
-        $traceProperty->setAccessible(true);
-        $traceProperty->setValue($errorException, $e->getTrace());
-        $traceProperty->setAccessible(false);
-        return $errorException;
+        $this->reportException($e);
+        $this->renderException($e, $output);
     }
 
     protected function registerBaseBindings()

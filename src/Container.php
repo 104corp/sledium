@@ -37,7 +37,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
     protected $dependencePath;
 
     /** @var bool */
-    protected $booted = false;
+    protected $isBooted = false;
     /** @var \Closure[] */
     protected $bootingCallbacks = [];
     /** @var \Closure[] */
@@ -50,6 +50,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
     protected $environment;
     /** @var  bool */
     protected $isRunningInConsole;
+    private $namespace;
 
     /**
      * Container constructor.
@@ -62,7 +63,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
     }
 
     /**
-     * Get the base path of the Laravel installation.
+     * Get the base path of the project.
      *
      * @return string
      */
@@ -75,7 +76,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
     /**
      * Get the path to the application "app" directory.
      *
-     * @param string $path Optionally, a path to append to the app path
+     * @param string $path To append to the app path
      * @return string
      */
     public function path($path = ''): string
@@ -90,7 +91,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
     /**
      * Get the path to the bootstrap directory.
      *
-     * @param string $path Optionally, a path to append to the bootstrap path
+     * @param string $path To append to the bootstrap path
      * @return string
      */
     public function bootstrapPath($path = ''): string
@@ -104,7 +105,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
     /**
      * Get the path to the application configuration files.
      *
-     * @param string $path Optionally, a path to append to the config path
+     * @param string $path To append to the config path
      * @return string
      */
     public function configPath($path = ''): string
@@ -118,7 +119,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
     /**
      * Get the path to the database directory.
      *
-     * @param string $path Optionally, a path to append to the database path
+     * @param string $path To append to the database path
      * @return string
      */
     public function databasePath($path = ''): string
@@ -131,7 +132,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
 
 
     /**
-     * Get the path to the public / web directory.
+     * Get the path to the public / web root directory.
      *
      * @return string
      */
@@ -181,78 +182,6 @@ class Container extends IlluminateContainer implements IlluminateApplication
             $this->dependencePath = $this->basePath() . DIRECTORY_SEPARATOR . 'dependencies';
         }
         return $this->dependencePath;
-    }
-
-    /**
-     * @param string $basePath
-     */
-    public function setBasePath(string $basePath)
-    {
-        $this->basePath = $basePath;
-    }
-
-    /**
-     * @param string $appPath
-     */
-    public function setAppPath(string $appPath)
-    {
-        $this->appPath = $appPath;
-    }
-
-    /**
-     * @param string $bootstrapPath
-     */
-    public function setBootstrapPath(string $bootstrapPath)
-    {
-        $this->bootstrapPath = $bootstrapPath;
-    }
-
-    /**
-     * @param string $configPath
-     */
-    public function setConfigPath(string $configPath)
-    {
-        $this->configPath = $configPath;
-    }
-
-    /**
-     * @param string $databasePath
-     */
-    public function setDatabasePath(string $databasePath)
-    {
-        $this->databasePath = $databasePath;
-    }
-
-    /**
-     * @param string $publicPath
-     */
-    public function setPublicPath(string $publicPath)
-    {
-        $this->publicPath = $publicPath;
-    }
-
-    /**
-     * @param string $storagePath
-     */
-    public function setStoragePath(string $storagePath)
-    {
-        $this->storagePath = $storagePath;
-    }
-
-    /**
-     * @param string $resourcePath
-     */
-    public function setResourcePath(string $resourcePath)
-    {
-        $this->resourcePath = $resourcePath;
-    }
-
-    /**
-     * @param string $dependencePath
-     */
-    public function setDependencePath(string $dependencePath)
-    {
-        $this->dependencePath = $dependencePath;
     }
 
     /**
@@ -413,21 +342,21 @@ class Container extends IlluminateContainer implements IlluminateApplication
      */
     public function registerConfiguredProviders()
     {
-        if (!parent::bound('config')) {
+        /** @var Config $config */
+        if (null == ($config = $this['config'] ?? null)) {
             throw new \RuntimeException('Missing "config" has not registered yet');
         }
-        /** @var Config $config */
-        $config = $this->get('config');
+
         $deferredProviders = $config->get('deferred-providers', []);
         foreach ($deferredProviders as $service => $provider) {
             $this->registerDeferredProvider($provider, $service);
         }
+
         $providers = $config->get('providers', []);
         foreach ($providers as $provider) {
             $this->register($provider);
         }
 
-        //register configured aliases
         $aliases = $config->get('aliases', []);
         foreach ($aliases as $alias => $service) {
             $this->alias($service, $alias);
@@ -448,21 +377,17 @@ class Container extends IlluminateContainer implements IlluminateApplication
         if (($registered = $this->getProvider($provider)) && !$force) {
             return $registered;
         }
-
         if (is_string($provider)) {
             $provider = new $provider($this);
         }
-
         if (method_exists($provider, 'register')) {
             $provider->register();
         }
-
         $this->markAsRegistered($provider);
 
-        if ($this->booted) {
+        if ($this->isBooted) {
             $this->bootProvider($provider);
         }
-
         return $provider;
     }
 
@@ -514,14 +439,13 @@ class Container extends IlluminateContainer implements IlluminateApplication
         }
         if (!$this->isLoadedProvider($provider)) {
             $this->register($instance = new $provider($this));
-            if (!$this->booted) {
+            if (!$this->isBooted) {
                 $this->booting(function () use ($instance) {
                     $this->bootProvider($instance);
                 });
             }
         }
     }
-
 
     /**
      * @param string $provider
@@ -539,14 +463,14 @@ class Container extends IlluminateContainer implements IlluminateApplication
      */
     public function boot()
     {
-        if ($this->booted) {
+        if ($this->isBooted) {
             return;
         }
-        $this->fireAppBootCallbacks();
+        $this->fireAppBootCallbacks(true);
         foreach ($this->loadedProviders as $provider) {
             $this->bootProvider($provider);
         }
-        $this->booted = true;
+        $this->isBooted = true;
         $this->fireAppBootCallbacks(false);
     }
 
@@ -555,7 +479,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
      */
     public function booting($callback)
     {
-        $this->addBootCallbacks($callback);
+        $this->addBootCallbacks($callback, true);
     }
 
     /**
@@ -580,6 +504,37 @@ class Container extends IlluminateContainer implements IlluminateApplication
         $this->loadedProviders = [];
         $this->deferredProviders = [];
         $this->init();
+    }
+
+    /**
+     * Get project app namespace
+     * @return string
+     */
+    public function getNamespace(): string
+    {
+        return $this->guessNamespace();
+    }
+
+    /**
+     * @return string
+     */
+    protected function guessNamespace():string
+    {
+        if ($this->namespace !== null) {
+            return $this->namespace;
+        }
+        if ($composerJson = realpath($this->basePath().'/composer.json')) {
+            $composerInfo = json_decode(file_get_contents($composerJson), true);
+            $psr4Namespaces = (array)$composerInfo['autoload']['psr-4'] ?? [];
+            foreach ($psr4Namespaces as $namespace => $paths) {
+                foreach ((array)$paths as $path) {
+                    if (realpath($this->path()) == realpath($this->basePath().'/'.$path)) {
+                        return $this->namespace = $namespace;
+                    }
+                }
+            }
+        }
+        throw new \RuntimeException('Unable to guss namespace.');
     }
 
     /**

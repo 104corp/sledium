@@ -9,7 +9,7 @@ use Sledium\Exceptions\HttpClientException;
 use Sledium\Handlers\DefaultErrorRenderer;
 use Sledium\Handlers\DefaultErrorReporter;
 use Sledium\Handlers\DefaultOptionsMethodHandler;
-use Sledium\Handlers\ErrorHandler;
+use Sledium\Handlers\DefaultErrorHandler;
 use Sledium\Handlers\IlluminateExceptionHandler;
 use Slim\CallableResolver;
 use Slim\Handlers\Strategies\RequestResponse;
@@ -120,7 +120,7 @@ class HttpServiceProvider extends ServiceProvider
     {
         if (!$container->has('errorHandler')) {
             $container['errorHandler'] = function (ContainerInterface $container) {
-                $handler = new ErrorHandler(
+                $handler = new DefaultErrorHandler(
                     $container->get('errorRenderer'),
                     $container->get('errorReporter'),
                     $this->displayErrorDetails()
