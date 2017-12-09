@@ -5,6 +5,7 @@ namespace Sledium;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Sledium\Traits\ContainerAwareTrait;
 
 abstract class MiddlewareAbstract
 {

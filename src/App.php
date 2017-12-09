@@ -5,6 +5,7 @@ namespace Sledium;
 
 use Sledium\Exceptions\HttpBadRequestException;
 use Sledium\Exceptions\HttpClientException;
+use Sledium\Traits\AppErrorHandleAwareTrait;
 use Slim\App as SlimApp;
 use FastRoute\Dispatcher;
 use Illuminate\Support\Collection;
@@ -25,6 +26,7 @@ use Slim\Http\Response;
  */
 class App extends SlimApp
 {
+    use AppErrorHandleAwareTrait;
     /**
      * @var array default settings
      */
@@ -222,35 +224,6 @@ class App extends SlimApp
     }
 
     /**
-     * Set php native error handlers
-     */
-    protected function setPhpNativeErrorHandlers()
-    {
-        $errorReporting = error_reporting();
-        error_reporting(0);
-        set_error_handler(
-            function ($level, $message, $file = '', $line = 0) use ($errorReporting) {
-                if ($errorReporting & $level) {
-                    error_clear_last();
-                    throw new \ErrorException($message, 0, $level, $file, $line);
-                }
-                return true;
-            }
-        );
-        set_exception_handler(
-            function ($e) {
-                $this->handleUncaughtException($e);
-            }
-        );
-        register_shutdown_function(
-            $shoutDownFunction = function () {
-                $this->handleShutdown();
-            }
-        );
-        $this->getContainer()->instance('shoutDownFunction', $shoutDownFunction);
-    }
-
-    /**
      * @param \Throwable $e
      */
     protected function handleUncaughtException(\Throwable $e)
@@ -270,28 +243,6 @@ class App extends SlimApp
             $response = $this->handlePhpError($e, $request, $response);
         }
         $this->respond($response);
-    }
-
-    /**
-     * before finish php process hook
-     */
-    protected function handleShutdown()
-    {
-        if (!is_null($error = error_get_last()) && $this->isFatalError($error['type'])) {
-            error_clear_last();
-            $this->handleUncaughtException(
-                new \ErrorException($error['message'], 0, $error['type'], $error['file'], $error['line'])
-            );
-        }
-    }
-
-    /**
-     * @param int $type
-     * @return bool
-     */
-    protected function isFatalError(int $type): bool
-    {
-        return in_array($type, [E_ERROR, E_CORE_ERROR, E_COMPILE_ERROR, E_PARSE]);
     }
 
     /**

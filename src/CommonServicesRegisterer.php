@@ -47,7 +47,7 @@ class CommonServicesRegisterer
     protected function registerCommonProviders()
     {
         foreach ([
-            // string[] abstract
+            //  provider
                  ] as $provider) {
             $this->container->register($provider);
         }

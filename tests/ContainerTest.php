@@ -5,9 +5,9 @@ namespace Sledium\Tests;
 
 use Sledium\Config;
 use Sledium\Container;
-use Sledium\Tests\Fixtures\Dummy1;
+use Sledium\Tests\Fixtures\DummyForDependence1;
 use Sledium\Tests\Fixtures\Dummy1ServiceProvider;
-use Sledium\Tests\Fixtures\Dummy2;
+use Sledium\Tests\Fixtures\DummyForDependence2;
 use Sledium\Tests\Fixtures\Dummy2ServiceProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -59,11 +59,11 @@ class ContainerTest extends TestCase
     {
         $basePath = $this->getFixtureBasePath('dependenceFolderShouldWork');
         $container = new Container($basePath);
-        $this->assertInstanceOf(Dummy1::class, $container->get('Abc'));
-        $this->assertInstanceOf(Dummy1::class, $container['Abc']);
+        $this->assertInstanceOf(DummyForDependence1::class, $container->get('Abc'));
+        $this->assertInstanceOf(DummyForDependence1::class, $container['Abc']);
         $this->assertTrue($container->get('Abc') === $container['Abc']);
-        $this->assertInstanceOf(Dummy2::class, $container['Cde']);
-        $this->assertInstanceOf(Dummy2::class, $container->get('Cde'));
+        $this->assertInstanceOf(DummyForDependence2::class, $container['Cde']);
+        $this->assertInstanceOf(DummyForDependence2::class, $container->get('Cde'));
         $this->assertTrue($container->get('Cde') === $container['Cde']);
     }
 

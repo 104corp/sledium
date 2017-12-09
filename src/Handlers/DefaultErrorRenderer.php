@@ -6,6 +6,11 @@ namespace Sledium\Handlers;
 use Sledium\Exceptions\HttpException;
 use Sledium\Interfaces\ErrorRendererInterface;
 
+/**
+ * Default HTTP error renderer
+ * Class DefaultErrorRenderer
+ * @package Sledium\Handlers
+ */
 class DefaultErrorRenderer implements ErrorRendererInterface
 {
     /**
@@ -55,13 +60,17 @@ class DefaultErrorRenderer implements ErrorRendererInterface
 
     private function renderJson(\Throwable $e, bool $displayErrorDetails)
     {
+        $message = $e->getMessage();
         if ($e instanceof HttpException) {
             $error = [
-                'message' => $e->getMessage()
+                'message' => empty($message) ? $e->getStatusReasonPhrase() : $message
             ];
         } else {
+            $reasonPhrase = 'Internal Server Error';
             $error = [
-                'message' => 'Internal Server Error',
+                'message' => $displayErrorDetails
+                    ? (empty($message) ? $reasonPhrase : $message)
+                    : $reasonPhrase
             ];
         }
         if ($displayErrorDetails) {
@@ -83,13 +92,17 @@ class DefaultErrorRenderer implements ErrorRendererInterface
 
     private function renderXml(\Throwable $e, bool $displayErrorDetails)
     {
+        $message = $e->getMessage();
         if ($e instanceof HttpException) {
-            $message = $e->getMessage();
+            $message = empty($message) ? $e->getStatusReasonPhrase() : $message;
         } else {
-            $message = 'Internal Server Error';
+            $reasonPhrase = 'Internal Server Error';
+            $message = $displayErrorDetails
+                ? (empty($message) ? $reasonPhrase : $message)
+                : $reasonPhrase;
         }
         $xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<error>\n  <message>"
-            . $this->xmlEscapeString($message, ENT_XML1, 'UTF-8')."</message>";
+            . $this->xmlEscapeString($message, ENT_XML1, 'UTF-8') . "</message>";
         if ($displayErrorDetails) {
             do {
                 $xml .= "  <exception>\n";
@@ -103,7 +116,6 @@ class DefaultErrorRenderer implements ErrorRendererInterface
             } while ($e = $e->getPrevious());
         }
         $xml .= "</error>";
-
         return $xml;
     }
 
@@ -114,14 +126,18 @@ class DefaultErrorRenderer implements ErrorRendererInterface
 
     private function renderHtml(\Throwable $e, bool $displayErrorDetails)
     {
+        $message = $e->getMessage();
         if ($e instanceof HttpException) {
             $title = $e->getStatusCode() . ' ' . $e->getStatusReasonPhrase();
-            $simpleMessage = '<p>' . $e->getMessage() . '</p>';
+            $message = '<p>' . (empty($message) ? $e->getStatusReasonPhrase() : $message) . '</p>';
             $detailHeadLine = '';
         } else {
-            $title = 'Internal Server Error';
+            $reasonPhrase = 'Internal Server Error';
+            $title = "500 $reasonPhrase";
+            $message = $displayErrorDetails
+                ? (empty($message) ? $reasonPhrase : $message)
+                : '<p>A website error has occurred. Sorry for the temporary inconvenience.</p>';
             $detailHeadLine = '<p>The application could not run because of the following error:</p>';
-            $simpleMessage = '<p>A website error has occurred. Sorry for the temporary inconvenience.</p>';
         }
         if ($displayErrorDetails) {
             $html = $detailHeadLine;
@@ -133,7 +149,7 @@ class DefaultErrorRenderer implements ErrorRendererInterface
                 $html .= $this->renderHtmlThrowable($e);
             }
         } else {
-            $html = $simpleMessage;
+            $html = $message;
         }
         $output = sprintf(
             "<html><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'>" .
@@ -141,7 +157,7 @@ class DefaultErrorRenderer implements ErrorRendererInterface
             "sans-serif;}h1{margin:0;font-size:48px;font-weight:normal;line-height:48px;}strong{" .
             "display:inline-block;width:65px;}</style></head><body><h2>%s</h2>%s</body></html>",
             $title,
-            $simpleMessage,
+            $message,
             $html
         );
         return $output;

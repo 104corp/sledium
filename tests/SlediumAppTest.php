@@ -34,7 +34,7 @@ class SlediumAppTest extends TestCase
      */
     public function shutdownFunctionShouldHandleError()
     {
-        $stub = Mockery::mock(App::class.'[isFatalError]')->makePartial()
+        $stub = Mockery::mock(App::class . '[isFatalError]')->makePartial()
             ->shouldAllowMockingProtectedMethods();
         $stub->shouldReceive('isFatalError')->andReturn(true);
         $this->assertInstanceOf(App::class, $stub);
@@ -46,11 +46,17 @@ class SlediumAppTest extends TestCase
         });
         unset($container['errorHandler']);
         $errorMessage = 'triggered error';
-        $container->instance('errorHandler', function ($request, $response, $error) use ($errorMessage) {
-            $this->assertInstanceOf(\ErrorException::class, $error);
-            $this->assertEquals($errorMessage, $error->getMessage());
-            return $response;
-        });
+        $errorReporting = error_reporting();
+        error_reporting(0);
+        $container->instance(
+            'errorHandler',
+            function ($request, $response, $error) use ($errorMessage, $errorReporting) {
+                error_reporting($errorReporting);
+                $this->assertInstanceOf(\ErrorException::class, $error);
+                $this->assertEquals($errorMessage, $error->getMessage());
+                return $response;
+            }
+        );
         trigger_error($errorMessage);
         $shutDownFunction();
     }
@@ -89,13 +95,13 @@ class SlediumAppTest extends TestCase
         $app = $client->getApp();
         $app->getContainer()['settings']['displayErrorDetails'] = true;
         $app->get('/foo', function () {
-            throw new \Exception('test error');
+            throw new \Exception('test exception', new \Error('test error'));
         });
         $app->get('/bar', function () {
             throw new HttpNotAcceptableException('test error');
         });
         $app->post('/bar', function () {
-            throw new HttpUnprocessableEntityException('test error', ['Content-Type'=>'application/json']);
+            throw new HttpUnprocessableEntityException('test error', ['Content-Type' => 'application/json']);
         });
         $response = $client->get('/foo', ['Accept' => 'application/json']);
         $response->assertStatus(500);

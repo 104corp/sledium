@@ -11,7 +11,7 @@ class Dummy1ServiceProvider extends ServiceProvider
     {
         $this->app->singleton('dummy1', function () {
             echo 'construct Dummy1';
-            return new Dummy1();
+            return new DummyForDependence1();
         });
     }
 }
