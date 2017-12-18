@@ -85,7 +85,7 @@ class ContainerTest extends TestCase
         $dummy2 = $container['dummy2'];
         $output = ob_get_clean();
         $this->assertRegExp("/construct/", $output);
-        $this->assertRegExp('/'.addslashes(get_class($dummy2)).'/', $output);
+        $this->assertRegExp('/' . addslashes(get_class($dummy2)) . '/', $output);
     }
 
     /**
@@ -109,7 +109,7 @@ class ContainerTest extends TestCase
         ob_start();
         $dummy = $container->get('dummy2');
         $output = ob_get_clean();
-        $this->assertRegExp('/'.addslashes(get_class($dummy)).'/', $output);
+        $this->assertRegExp('/' . addslashes(get_class($dummy)) . '/', $output);
 
         //boot at after
         $container = new Container(__DIR__);
@@ -129,7 +129,76 @@ class ContainerTest extends TestCase
         ob_start();
         $container->boot();
         $output = ob_get_clean();
-        $this->assertRegExp('/'.addslashes(get_class($dummy)).'/', $output);
+        $this->assertRegExp('/' . addslashes(get_class($dummy)) . '/', $output);
+    }
+
+    /**
+     * @test
+     */
+    public function settersShouldOK()
+    {
+        $container = new Container(__DIR__);
+
+        $this->assertEquals(
+            $container->basePath() . DIRECTORY_SEPARATOR . 'dependencies',
+            $container->dependencePath()
+        );
+        $container->setDependencePath(__DIR__);
+        $this->assertEquals(__DIR__, $container->dependencePath());
+
+        $this->assertEquals(__DIR__, $container->basePath());
+        $path = realpath(__DIR__ . "/../");
+        $container->setBasePath($path);
+        $this->assertEquals($path, $container->basePath());
+
+        $this->assertEquals(
+            $container->basePath() . DIRECTORY_SEPARATOR . "app",
+            $container->path()
+        );
+        $container->setAppPath(__DIR__);
+        $this->assertEquals(__DIR__, $container->path());
+
+        $this->assertEquals(
+            $container->basePath() . DIRECTORY_SEPARATOR . "database",
+            $container->databasePath()
+        );
+        $container->setDatabasePath(__DIR__);
+        $this->assertEquals(__DIR__, $container->databasePath());
+
+        $this->assertEquals(
+            $container->basePath() . DIRECTORY_SEPARATOR . "public",
+            $container->publicPath()
+        );
+        $container->setPublicPath(__DIR__);
+        $this->assertEquals(__DIR__, $container->publicPath());
+
+        $this->assertEquals(
+            $container->basePath() . DIRECTORY_SEPARATOR . "bootstrap",
+            $container->bootstrapPath()
+        );
+        $container->setBootstrapPath(__DIR__);
+        $this->assertEquals(__DIR__, $container->bootstrapPath());
+
+        $this->assertEquals(
+            $container->basePath() . DIRECTORY_SEPARATOR . "storage",
+            $container->storagePath()
+        );
+        $container->setStoragePath(__DIR__);
+        $this->assertEquals(__DIR__, $container->storagePath());
+
+        $this->assertEquals(
+            $container->basePath() . DIRECTORY_SEPARATOR . "config",
+            $container->configPath()
+        );
+        $container->setConfigPath(__DIR__);
+        $this->assertEquals(__DIR__, $container->configPath());
+
+        $this->assertEquals(
+            $container->basePath() . DIRECTORY_SEPARATOR . "resources",
+            $container->resourcePath()
+        );
+        $container->setResourcePath(__DIR__);
+        $this->assertEquals(__DIR__, $container->resourcePath());
     }
 
     private function getFixtureBasePath($path = null)
