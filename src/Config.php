@@ -108,7 +108,15 @@ class Config implements \ArrayAccess, ConfigContract
     public function prepend($key, $value)
     {
         $array = $this->get($key);
-        array_unshift($array, $value);
+        if ($array instanceof Collection) {
+            $array = $array->toArray();
+            array_unshift($array, $value);
+            $array = new Collection($array);
+        } elseif (is_array($array)) {
+            array_unshift($array, $value);
+        } else {
+            throw new \InvalidArgumentException("$key can not prepend");
+        }
         $this->set($key, $array);
     }
 
@@ -122,9 +130,18 @@ class Config implements \ArrayAccess, ConfigContract
     public function push($key, $value)
     {
         $array = $this->get($key);
-        $array[] = $value;
+        if ($array instanceof Collection) {
+            $array = $array->toArray();
+            array_push($array, $value);
+            $array = new Collection($array);
+        } elseif (is_array($array)) {
+            array_push($array, $value);
+        } else {
+            throw new \InvalidArgumentException("$key can not push");
+        }
         $this->set($key, $array);
     }
+
 
 
     /**
