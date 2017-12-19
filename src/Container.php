@@ -154,7 +154,7 @@ class Container extends IlluminateContainer implements IlluminateApplication
         if (null === $this->storagePath) {
             $this->storagePath = $this->basePath() . DIRECTORY_SEPARATOR . 'storage';
         }
-        return $this->basePath() . DIRECTORY_SEPARATOR . 'storage';
+        return $this->storagePath;
     }
 
     /**
@@ -183,6 +183,80 @@ class Container extends IlluminateContainer implements IlluminateApplication
         }
         return $this->dependencePath;
     }
+
+    /**
+     * @param string $basePath
+     */
+    public function setBasePath(string $basePath)
+    {
+        $this->basePath = $basePath;
+    }
+
+    /**
+     * @param string $appPath
+     */
+    public function setAppPath(string $appPath)
+    {
+        $this->appPath = $appPath;
+    }
+
+    /**
+     * @param string $bootstrapPath
+     */
+    public function setBootstrapPath(string $bootstrapPath)
+    {
+        $this->bootstrapPath = $bootstrapPath;
+    }
+
+    /**
+     * @param string $configPath
+     */
+    public function setConfigPath(string $configPath)
+    {
+        $this->configPath = $configPath;
+    }
+
+    /**
+     * @param string $databasePath
+     */
+    public function setDatabasePath(string $databasePath)
+    {
+        $this->databasePath = $databasePath;
+    }
+
+    /**
+     * @param string $publicPath
+     */
+    public function setPublicPath(string $publicPath)
+    {
+        $this->publicPath = $publicPath;
+    }
+
+    /**
+     * @param string $storagePath
+     */
+    public function setStoragePath(string $storagePath)
+    {
+        $this->storagePath = $storagePath;
+    }
+
+    /**
+     * @param string $resourcePath
+     */
+    public function setResourcePath(string $resourcePath)
+    {
+        $this->resourcePath = $resourcePath;
+    }
+
+    /**
+     * @param string $dependencePath
+     */
+    public function setDependencePath(string $dependencePath)
+    {
+        $this->dependencePath = $dependencePath;
+    }
+
+
 
     /**
      * Get the path to the cached services.php file.
