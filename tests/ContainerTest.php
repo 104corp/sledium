@@ -199,6 +199,54 @@ class ContainerTest extends TestCase
         );
         $container->setResourcePath(__DIR__);
         $this->assertEquals(__DIR__, $container->resourcePath());
+
+        $container->setEnvironment('production');
+        $this->assertEquals('production', $container->environment());
+
+        $container->setIsRunningInConsole(false);
+        $this->assertEquals(false, $container->runningInConsole());
+
+        $container->setIsRunningInConsole(true);
+        $this->assertEquals(true, $container->runningInConsole());
+    }
+
+    /**
+     * @test
+     */
+    public function flushShouldWorks()
+    {
+        $container = new Container(__DIR__);
+        $container['abc'] = function () {
+            return 'abc';
+        };
+        $container->instance('bcd', 'bcd');
+        $container->bind('cde', 'cde');
+
+        $this->assertTrue($container->has('abc'));
+        $this->assertTrue(isset($container['abc']));
+        $this->assertTrue($container->bound('abc'));
+
+        $this->assertTrue($container->has('bcd'));
+        $this->assertTrue(isset($container['bcd']));
+        $this->assertTrue($container->bound('bcd'));
+
+        $this->assertTrue($container->has('cde'));
+        $this->assertTrue(isset($container['cde']));
+        $this->assertTrue($container->bound('cde'));
+
+        $container->flush();
+
+        $this->assertFalse($container->has('abc'));
+        $this->assertFalse(isset($container['abc']));
+        $this->assertFalse($container->bound('abc'));
+
+        $this->assertFalse($container->has('bcd'));
+        $this->assertFalse(isset($container['bcd']));
+        $this->assertFalse($container->bound('bcd'));
+
+        $this->assertFalse($container->has('cde'));
+        $this->assertFalse(isset($container['cde']));
+        $this->assertFalse($container->bound('cde'));
     }
 
     private function getFixtureBasePath($path = null)

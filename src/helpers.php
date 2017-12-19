@@ -1,6 +1,6 @@
 <?php
 /**
- *
+ * Add for some laravel service provider
  */
 use Sledium\Container;
 

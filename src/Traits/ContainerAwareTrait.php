@@ -48,22 +48,4 @@ trait ContainerAwareTrait
     {
         return $this->getContainer()->has($name);
     }
-
-    /**
-     * @param $name
-     * @return mixed
-     */
-    public function __get($name)
-    {
-        return $this->get($name);
-    }
-
-    /**
-     * @param $name
-     * @return bool
-     */
-    public function __isset($name)
-    {
-        return $this->has($name);
-    }
 }
